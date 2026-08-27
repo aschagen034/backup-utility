@@ -79,6 +79,8 @@ namespace BackupUtility
             // Store the selected destination folder
             string destinationFolder = txtDestinationPath.Text;
 
+            int errorCount = 0;
+
             try
             {
                 // Count the total number of files across all source folders
@@ -106,6 +108,8 @@ namespace BackupUtility
                 // Counters used for the final backup results
                 int copiedCount = 0;
                 int skippedCount = 0;
+                int scannedCount = 0;
+                
 
                 // Run the file-copying work on a background thread
                 // so the WinForms interface stays responsive
@@ -123,6 +127,8 @@ namespace BackupUtility
                         // Go through every file found in the source folder
                         foreach (string file in files)
                         {
+                            scannedCount++;
+
                             // Get the file's path relative to the source folder
                             string relativePath = Path.GetRelativePath(sourceFolder, file);
 
@@ -142,6 +148,7 @@ namespace BackupUtility
                             if (!File.Exists(destFile))
                             {
                                 File.Copy(file, destFile);
+
                                 copiedCount++;
                             }
                             else
@@ -170,6 +177,10 @@ namespace BackupUtility
                             {
                                 progressBarBackup.Value++;
 
+                                int percent = totalFiles > 0 ? (int)((double)progressBarBackup.Value / totalFiles * 100) : 0;
+
+                                lblProgressPercent.Text = $"{percent}%";
+
                                 lblStatus.Text = $"Processing {progressBarBackup.Value} of {totalFiles} files";
 
                             });
@@ -182,11 +193,14 @@ namespace BackupUtility
                 // This runs after Task.Run has completely finished
                 lblStatus.Text = "Backup complete!";
 
-                // Show the final backup results
-                MessageBox.Show($"Backup complete!\nFiles copied: {copiedCount}\nFiles skipped: {skippedCount}");
+                lblFilesScanned.Text = $"Files scanned: {scannedCount:N0}";
+                lblFilesCopied.Text = $"Files copied: {copiedCount:N0}";
+                lblFilesSkipped.Text = $"Files skipped: {skippedCount:N0}";
+                lblErrors.Text = $"Errors: {errorCount:N0}";
             }
             catch (Exception ex)
             {
+                errorCount++;
                 // If anything goes wrong during backup, show the error instead of crashing the program
                 MessageBox.Show("Backup failed: " + ex.Message);
             }
@@ -208,5 +222,7 @@ namespace BackupUtility
 
             listSourceFolders.Items.Remove(listSourceFolders.SelectedItem);
         }
+
+        
     }
 }

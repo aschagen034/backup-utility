@@ -35,17 +35,22 @@
             btnRemoveSource = new Button();
             listSourceFolders = new ListBox();
             lblSource = new Label();
-            backupPanel = new Panel();
+            destinationPanel = new Panel();
             btnSelectDestination = new Button();
             txtDestinationPath = new TextBox();
             lblDestination = new Label();
-            panel1 = new Panel();
+            backupProgressPanel = new Panel();
+            lblProgressPercent = new Label();
             lblStatus = new Label();
             progressBarBackup = new ProgressBar();
             lblBackupProgress = new Label();
+            lblFilesScanned = new Label();
+            lblFilesCopied = new Label();
+            lblFilesSkipped = new Label();
+            lblErrors = new Label();
             sourcePanel.SuspendLayout();
-            backupPanel.SuspendLayout();
-            panel1.SuspendLayout();
+            destinationPanel.SuspendLayout();
+            backupProgressPanel.SuspendLayout();
             SuspendLayout();
             // 
             // btnAddSource
@@ -98,7 +103,7 @@
             // 
             // btnRemoveSource
             // 
-            btnRemoveSource.Location = new Point(493, 84);
+            btnRemoveSource.Location = new Point(493, 70);
             btnRemoveSource.Name = "btnRemoveSource";
             btnRemoveSource.Size = new Size(112, 23);
             btnRemoveSource.TabIndex = 15;
@@ -126,16 +131,16 @@
             lblSource.TabIndex = 9;
             lblSource.Text = "Source Folder:";
             // 
-            // backupPanel
+            // destinationPanel
             // 
-            backupPanel.BackColor = Color.DarkGray;
-            backupPanel.Controls.Add(btnSelectDestination);
-            backupPanel.Controls.Add(txtDestinationPath);
-            backupPanel.Controls.Add(lblDestination);
-            backupPanel.Location = new Point(382, 242);
-            backupPanel.Name = "backupPanel";
-            backupPanel.Size = new Size(652, 118);
-            backupPanel.TabIndex = 12;
+            destinationPanel.BackColor = Color.DarkGray;
+            destinationPanel.Controls.Add(btnSelectDestination);
+            destinationPanel.Controls.Add(txtDestinationPath);
+            destinationPanel.Controls.Add(lblDestination);
+            destinationPanel.Location = new Point(382, 239);
+            destinationPanel.Name = "destinationPanel";
+            destinationPanel.Size = new Size(652, 118);
+            destinationPanel.TabIndex = 12;
             // 
             // btnSelectDestination
             // 
@@ -166,15 +171,28 @@
             lblDestination.TabIndex = 10;
             lblDestination.Text = "Backup Destination:";
             // 
-            // panel1
+            // backupProgressPanel
             // 
-            panel1.Controls.Add(lblStatus);
-            panel1.Controls.Add(progressBarBackup);
-            panel1.Controls.Add(lblBackupProgress);
-            panel1.Location = new Point(382, 442);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(652, 110);
-            panel1.TabIndex = 13;
+            backupProgressPanel.BackColor = SystemColors.ScrollBar;
+            backupProgressPanel.Controls.Add(lblProgressPercent);
+            backupProgressPanel.Controls.Add(lblStatus);
+            backupProgressPanel.Controls.Add(progressBarBackup);
+            backupProgressPanel.Controls.Add(lblBackupProgress);
+            backupProgressPanel.Location = new Point(382, 586);
+            backupProgressPanel.Name = "backupProgressPanel";
+            backupProgressPanel.Size = new Size(652, 110);
+            backupProgressPanel.TabIndex = 13;
+            // 
+            // lblProgressPercent
+            // 
+            lblProgressPercent.BackColor = SystemColors.ScrollBar;
+            lblProgressPercent.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblProgressPercent.Location = new Point(466, 49);
+            lblProgressPercent.Name = "lblProgressPercent";
+            lblProgressPercent.Size = new Size(53, 23);
+            lblProgressPercent.TabIndex = 14;
+            lblProgressPercent.Text = "0%";
+            lblProgressPercent.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblStatus
             // 
@@ -189,6 +207,8 @@
             // 
             // progressBarBackup
             // 
+            progressBarBackup.BackColor = Color.White;
+            progressBarBackup.ForeColor = SystemColors.ButtonHighlight;
             progressBarBackup.Location = new Point(25, 49);
             progressBarBackup.Name = "progressBarBackup";
             progressBarBackup.Size = new Size(435, 23);
@@ -205,14 +225,54 @@
             lblBackupProgress.TabIndex = 11;
             lblBackupProgress.Text = "Backup Progress";
             // 
+            // lblFilesScanned
+            // 
+            lblFilesScanned.BackColor = SystemColors.ButtonHighlight;
+            lblFilesScanned.Location = new Point(382, 439);
+            lblFilesScanned.Name = "lblFilesScanned";
+            lblFilesScanned.Size = new Size(158, 15);
+            lblFilesScanned.TabIndex = 14;
+            lblFilesScanned.Text = "Files scanned: 0";
+            // 
+            // lblFilesCopied
+            // 
+            lblFilesCopied.BackColor = SystemColors.ButtonHighlight;
+            lblFilesCopied.Location = new Point(382, 478);
+            lblFilesCopied.Name = "lblFilesCopied";
+            lblFilesCopied.Size = new Size(158, 15);
+            lblFilesCopied.TabIndex = 16;
+            lblFilesCopied.Text = "Files copied: 0";
+            // 
+            // lblFilesSkipped
+            // 
+            lblFilesSkipped.BackColor = SystemColors.ButtonHighlight;
+            lblFilesSkipped.Location = new Point(382, 516);
+            lblFilesSkipped.Name = "lblFilesSkipped";
+            lblFilesSkipped.Size = new Size(158, 15);
+            lblFilesSkipped.TabIndex = 17;
+            lblFilesSkipped.Text = "Files skipped: 0";
+            // 
+            // lblErrors
+            // 
+            lblErrors.BackColor = SystemColors.ButtonHighlight;
+            lblErrors.Location = new Point(382, 554);
+            lblErrors.Name = "lblErrors";
+            lblErrors.Size = new Size(158, 15);
+            lblErrors.TabIndex = 18;
+            lblErrors.Text = "Errors: 0";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Gainsboro;
-            ClientSize = new Size(1424, 706);
-            Controls.Add(panel1);
-            Controls.Add(backupPanel);
+            ClientSize = new Size(1425, 746);
+            Controls.Add(lblErrors);
+            Controls.Add(lblFilesSkipped);
+            Controls.Add(lblFilesCopied);
+            Controls.Add(lblFilesScanned);
+            Controls.Add(backupProgressPanel);
+            Controls.Add(destinationPanel);
             Controls.Add(sourcePanel);
             Controls.Add(lblTitle);
             Controls.Add(btnStartBackup);
@@ -221,10 +281,10 @@
             Load += MainForm_Load;
             sourcePanel.ResumeLayout(false);
             sourcePanel.PerformLayout();
-            backupPanel.ResumeLayout(false);
-            backupPanel.PerformLayout();
-            panel1.ResumeLayout(false);
-            panel1.PerformLayout();
+            destinationPanel.ResumeLayout(false);
+            destinationPanel.PerformLayout();
+            backupProgressPanel.ResumeLayout(false);
+            backupProgressPanel.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -236,15 +296,20 @@
         private Label lblTitle;
         private Panel sourcePanel;
         private Label lblSource;
-        private Panel backupPanel;
+        private Panel destinationPanel;
         private Button btnSelectDestination;
         private TextBox txtDestinationPath;
         private Label lblDestination;
-        private Panel panel1;
+        private Panel backupProgressPanel;
         private Label lblStatus;
         private ProgressBar progressBarBackup;
         private Label lblBackupProgress;
         private ListBox listSourceFolders;
         private Button btnRemoveSource;
+        private Label lblProgressPercent;
+        private Label lblFilesScanned;
+        private Label lblFilesCopied;
+        private Label lblFilesSkipped;
+        private Label lblErrors;
     }
 }

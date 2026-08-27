@@ -28,48 +28,43 @@
         /// </summary>
         private void InitializeComponent()
         {
-            btnSelectSource = new Button();
-            txtSourcePath = new TextBox();
+            btnAddSource = new Button();
             btnStartBackup = new Button();
             lblTitle = new Label();
             sourcePanel = new Panel();
+            btnRemoveSource = new Button();
+            listSourceFolders = new ListBox();
             lblSource = new Label();
             backupPanel = new Panel();
-            lblDestination = new Label();
-            txtDestinationPath = new TextBox();
             btnSelectDestination = new Button();
+            txtDestinationPath = new TextBox();
+            lblDestination = new Label();
             panel1 = new Panel();
-            lblBackupProgress = new Label();
-            progressBarBackup = new ProgressBar();
             lblStatus = new Label();
+            progressBarBackup = new ProgressBar();
+            lblBackupProgress = new Label();
             sourcePanel.SuspendLayout();
             backupPanel.SuspendLayout();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
-            // btnSelectSource
+            // btnAddSource
             // 
-            btnSelectSource.Location = new Point(493, 55);
-            btnSelectSource.Name = "btnSelectSource";
-            btnSelectSource.Size = new Size(112, 23);
-            btnSelectSource.TabIndex = 0;
-            btnSelectSource.Text = "Select Source";
-            btnSelectSource.UseVisualStyleBackColor = true;
-            btnSelectSource.Click += btnSelectSource_Click;
-            // 
-            // txtSourcePath
-            // 
-            txtSourcePath.Location = new Point(25, 55);
-            txtSourcePath.Name = "txtSourcePath";
-            txtSourcePath.Size = new Size(435, 23);
-            txtSourcePath.TabIndex = 1;
+            btnAddSource.Location = new Point(493, 44);
+            btnAddSource.Name = "btnAddSource";
+            btnAddSource.Size = new Size(112, 23);
+            btnAddSource.TabIndex = 0;
+            btnAddSource.Text = "Add Folder";
+            btnAddSource.UseVisualStyleBackColor = true;
+            btnAddSource.Click += btnAddSource_Click;
             // 
             // btnStartBackup
             // 
-            btnStartBackup.BackColor = SystemColors.ControlDarkDark;
+            btnStartBackup.BackColor = SystemColors.Desktop;
+            btnStartBackup.FlatStyle = FlatStyle.Flat;
             btnStartBackup.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnStartBackup.ForeColor = SystemColors.Control;
-            btnStartBackup.Location = new Point(554, 378);
+            btnStartBackup.Location = new Point(644, 378);
             btnStartBackup.Name = "btnStartBackup";
             btnStartBackup.Size = new Size(129, 40);
             btnStartBackup.TabIndex = 4;
@@ -80,10 +75,10 @@
             // lblTitle
             // 
             lblTitle.AutoSize = true;
-            lblTitle.BackColor = SystemColors.ButtonHighlight;
+            lblTitle.BackColor = Color.WhiteSmoke;
             lblTitle.BorderStyle = BorderStyle.FixedSingle;
             lblTitle.Font = new Font("Segoe UI", 20.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblTitle.Location = new Point(518, 22);
+            lblTitle.Location = new Point(608, 22);
             lblTitle.Name = "lblTitle";
             lblTitle.Size = new Size(200, 39);
             lblTitle.TabIndex = 7;
@@ -91,50 +86,56 @@
             // 
             // sourcePanel
             // 
-            sourcePanel.Controls.Add(btnSelectSource);
-            sourcePanel.Controls.Add(txtSourcePath);
+            sourcePanel.BackColor = Color.DarkGray;
+            sourcePanel.Controls.Add(btnRemoveSource);
+            sourcePanel.Controls.Add(listSourceFolders);
+            sourcePanel.Controls.Add(btnAddSource);
             sourcePanel.Controls.Add(lblSource);
-            sourcePanel.Location = new Point(292, 96);
+            sourcePanel.Location = new Point(382, 96);
             sourcePanel.Name = "sourcePanel";
-            sourcePanel.Size = new Size(652, 96);
+            sourcePanel.Size = new Size(652, 122);
             sourcePanel.TabIndex = 11;
+            // 
+            // btnRemoveSource
+            // 
+            btnRemoveSource.Location = new Point(493, 84);
+            btnRemoveSource.Name = "btnRemoveSource";
+            btnRemoveSource.Size = new Size(112, 23);
+            btnRemoveSource.TabIndex = 15;
+            btnRemoveSource.Text = "Remove Folder";
+            btnRemoveSource.UseVisualStyleBackColor = true;
+            btnRemoveSource.Click += btnRemoveSource_Click;
+            // 
+            // listSourceFolders
+            // 
+            listSourceFolders.FormattingEnabled = true;
+            listSourceFolders.ItemHeight = 15;
+            listSourceFolders.Location = new Point(25, 44);
+            listSourceFolders.Name = "listSourceFolders";
+            listSourceFolders.Size = new Size(418, 49);
+            listSourceFolders.TabIndex = 14;
             // 
             // lblSource
             // 
             lblSource.AutoSize = true;
             lblSource.BackColor = SystemColors.ButtonHighlight;
-            lblSource.Location = new Point(25, 18);
+            lblSource.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblSource.Location = new Point(25, 10);
             lblSource.Name = "lblSource";
-            lblSource.Size = new Size(79, 15);
+            lblSource.Size = new Size(99, 19);
             lblSource.TabIndex = 9;
-            lblSource.Text = "Source Folder";
+            lblSource.Text = "Source Folder:";
             // 
             // backupPanel
             // 
+            backupPanel.BackColor = Color.DarkGray;
             backupPanel.Controls.Add(btnSelectDestination);
             backupPanel.Controls.Add(txtDestinationPath);
             backupPanel.Controls.Add(lblDestination);
-            backupPanel.Location = new Point(292, 242);
+            backupPanel.Location = new Point(382, 242);
             backupPanel.Name = "backupPanel";
-            backupPanel.Size = new Size(652, 99);
+            backupPanel.Size = new Size(652, 118);
             backupPanel.TabIndex = 12;
-            // 
-            // lblDestination
-            // 
-            lblDestination.AutoSize = true;
-            lblDestination.BackColor = SystemColors.ButtonHighlight;
-            lblDestination.Location = new Point(25, 17);
-            lblDestination.Name = "lblDestination";
-            lblDestination.Size = new Size(109, 15);
-            lblDestination.TabIndex = 10;
-            lblDestination.Text = "Backup Destination";
-            // 
-            // txtDestinationPath
-            // 
-            txtDestinationPath.Location = new Point(20, 47);
-            txtDestinationPath.Name = "txtDestinationPath";
-            txtDestinationPath.Size = new Size(440, 23);
-            txtDestinationPath.TabIndex = 11;
             // 
             // btnSelectDestination
             // 
@@ -145,27 +146,46 @@
             btnSelectDestination.TabIndex = 12;
             btnSelectDestination.Text = "Select Destination";
             btnSelectDestination.UseVisualStyleBackColor = true;
+            btnSelectDestination.Click += btnSelectDestination_Click;
+            // 
+            // txtDestinationPath
+            // 
+            txtDestinationPath.Location = new Point(20, 49);
+            txtDestinationPath.Name = "txtDestinationPath";
+            txtDestinationPath.Size = new Size(440, 23);
+            txtDestinationPath.TabIndex = 11;
+            // 
+            // lblDestination
+            // 
+            lblDestination.AutoSize = true;
+            lblDestination.BackColor = SystemColors.ButtonHighlight;
+            lblDestination.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblDestination.Location = new Point(25, 17);
+            lblDestination.Name = "lblDestination";
+            lblDestination.Size = new Size(133, 19);
+            lblDestination.TabIndex = 10;
+            lblDestination.Text = "Backup Destination:";
             // 
             // panel1
             // 
             panel1.Controls.Add(lblStatus);
             panel1.Controls.Add(progressBarBackup);
             panel1.Controls.Add(lblBackupProgress);
-            panel1.Location = new Point(292, 442);
+            panel1.Location = new Point(382, 442);
             panel1.Name = "panel1";
             panel1.Size = new Size(652, 110);
             panel1.TabIndex = 13;
             // 
-            // lblBackupProgress
+            // lblStatus
             // 
-            lblBackupProgress.AutoSize = true;
-            lblBackupProgress.BackColor = SystemColors.ButtonHighlight;
-            lblBackupProgress.Location = new Point(25, 14);
-            lblBackupProgress.Name = "lblBackupProgress";
-            lblBackupProgress.Size = new Size(94, 15);
-            lblBackupProgress.TabIndex = 11;
-            lblBackupProgress.Text = "Backup Progress";
-            
+            lblStatus.AutoSize = true;
+            lblStatus.BackColor = SystemColors.Control;
+            lblStatus.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblStatus.Location = new Point(25, 84);
+            lblStatus.Name = "lblStatus";
+            lblStatus.Size = new Size(44, 17);
+            lblStatus.TabIndex = 13;
+            lblStatus.Text = "Ready";
             // 
             // progressBarBackup
             // 
@@ -174,22 +194,23 @@
             progressBarBackup.Size = new Size(435, 23);
             progressBarBackup.TabIndex = 12;
             // 
-            // lblStatus
+            // lblBackupProgress
             // 
-            lblStatus.AutoSize = true;
-            lblStatus.BackColor = SystemColors.Control;
-            lblStatus.Location = new Point(25, 84);
-            lblStatus.Name = "lblStatus";
-            lblStatus.Size = new Size(39, 15);
-            lblStatus.TabIndex = 13;
-            lblStatus.Text = "Ready";
+            lblBackupProgress.AutoSize = true;
+            lblBackupProgress.BackColor = SystemColors.ButtonHighlight;
+            lblBackupProgress.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblBackupProgress.Location = new Point(25, 14);
+            lblBackupProgress.Name = "lblBackupProgress";
+            lblBackupProgress.Size = new Size(109, 17);
+            lblBackupProgress.TabIndex = 11;
+            lblBackupProgress.Text = "Backup Progress";
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            BackColor = Color.WhiteSmoke;
-            ClientSize = new Size(1236, 577);
+            BackColor = Color.Gainsboro;
+            ClientSize = new Size(1424, 706);
             Controls.Add(panel1);
             Controls.Add(backupPanel);
             Controls.Add(sourcePanel);
@@ -210,8 +231,7 @@
 
         #endregion
 
-        private Button btnSelectSource;
-        private TextBox txtSourcePath;
+        private Button btnAddSource;
         private Button btnStartBackup;
         private Label lblTitle;
         private Panel sourcePanel;
@@ -224,5 +244,7 @@
         private Label lblStatus;
         private ProgressBar progressBarBackup;
         private Label lblBackupProgress;
+        private ListBox listSourceFolders;
+        private Button btnRemoveSource;
     }
 }

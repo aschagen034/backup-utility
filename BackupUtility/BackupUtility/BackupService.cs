@@ -90,6 +90,8 @@ namespace BackupUtility
                         }
                         catch
                         {
+                            // If an error occurs while processing a file, increase
+                            // the error counter and continue with the next file
                             errorCount++;
                         }
 

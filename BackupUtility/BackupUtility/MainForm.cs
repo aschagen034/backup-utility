@@ -24,8 +24,24 @@ namespace BackupUtility
                 // Opens the dialog and checks if the user selected a folder
                 if (folderDialog.ShowDialog() == DialogResult.OK)
                 {
-                    // Displays the selected source folder path in the listbox
-                    listSourceFolders.Items.Add(folderDialog.SelectedPath);
+                    string selectedFolder = folderDialog.SelectedPath;
+
+                    // Check whether this folder is already in the source list
+                    bool alreadyAdded = listSourceFolders.Items
+                        .Cast<string>()
+                        .Any(folder => folder.Equals(
+                            selectedFolder,
+                            StringComparison.OrdinalIgnoreCase
+                        ));
+
+                    if (alreadyAdded)
+                    {
+                        MessageBox.Show("This folder has already been added.");
+                        return;
+                    }
+
+                    // Add the folder if it is not already in the list
+                    listSourceFolders.Items.Add(selectedFolder);
                 }
             }
         }

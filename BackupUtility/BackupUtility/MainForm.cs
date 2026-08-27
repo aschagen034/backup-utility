@@ -55,6 +55,15 @@ namespace BackupUtility
             {
                 string[] files = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories);
 
+                progressBarBackup.Minimum = 0;
+                progressBarBackup.Maximum = files.Length;
+                progressBarBackup.Value = 0;
+
+                lblStatus.Text = "Starting backup...";
+
+                int copiedCount = 0;
+                int skippedCount = 0;
+
                 foreach (string file in files)
                 {
                     string relativePath = Path.GetRelativePath(sourceFolder, file);
@@ -71,6 +80,7 @@ namespace BackupUtility
                     if (!File.Exists(destFile))
                     {
                         File.Copy(file, destFile);
+                        copiedCount++;
                     }
                     else
                     {
@@ -80,11 +90,20 @@ namespace BackupUtility
                         if (sourceModified > destinationModified)
                         {
                             File.Copy(file, destFile, true);
+                            copiedCount++;
+                        }
+                        else
+                        {
+                            skippedCount++;
                         }
                     }
+
+                    progressBarBackup.Value++;
+                    lblStatus.Text = $"Processing {progressBarBackup.Value} of {files.Length} files";
                 }
 
-                MessageBox.Show("All files copied successfully!");
+                //MessageBox.Show($"Backup complete!\nFiles copied: {copiedCount}\nFiles skipped: {skippedCount}");
+                lblStatus.Text = "Backup complete!";
             }
             catch (Exception ex)
             {

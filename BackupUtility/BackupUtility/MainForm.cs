@@ -24,7 +24,7 @@ namespace BackupUtility
                 // Opens the dialog and checks if the user selected a folder
                 if (folderDialog.ShowDialog() == DialogResult.OK)
                 {
-                    // Displays the selected source folder path in the textbox
+                    // Displays the selected source folder path in the listbox
                     listSourceFolders.Items.Add(folderDialog.SelectedPath);
                 }
             }
@@ -49,10 +49,27 @@ namespace BackupUtility
         }
 
         /*
+            Removes the currently selected source folder from the ListBox.
+            If no folder is selected, show a message and stop the function.
+         */
+        private void btnRemoveSource_Click(object sender, EventArgs e)
+        {
+            // Check whether the user selected a folder in the ListBox.
+            if (listSourceFolders.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a folder to remove.");
+                return;
+            }
+
+            // Remove the selected folder from the list of source folders
+            listSourceFolders.Items.Remove(listSourceFolders.SelectedItem);
+        }
+
+        /*
             Starts the backup when the user clicks the button.
-            It scans all source files, copies new or modified files in the background,
+            It scans all files across multiple source folders, copies new or modified files in the background,
             skips unchanged files, and updates the progress bar and backup results. 
-            The use of async in this event handler allows it to wait for asynchronous work without
+            The use of async in this event handler allows the backup work to run in the background without
             freezing the interface.
          */
         private async void btnStartBackup_Click(object sender, EventArgs e)
@@ -71,7 +88,8 @@ namespace BackupUtility
                 return;
             }
 
-            // Store all source folders from the ListBox in a normal list
+            // Convert all folders currently stored in the ListBox
+            // into a normal List<string> that can be passed to BackupService
             List<string> sourceFolders = listSourceFolders.Items
                 .Cast<string>()
                 .ToList();
@@ -79,128 +97,70 @@ namespace BackupUtility
             // Store the selected destination folder
             string destinationFolder = txtDestinationPath.Text;
 
-            int errorCount = 0;
+            // Reset the progress UI before starting a new backup
+            progressBarBackup.Value = 0;
+            lblProgressPercent.Text = "0%";
+            lblStatus.Text = "Starting backup...";
+
+            // Disbale the Start Backup button so the user cannot
+            // start another backup while one is already running
+            btnStartBackup.Enabled = false;
+
+            // Reset the backup statistics from the previous backup
+            lblFilesScanned.Text = "Files scanned: 0";
+            lblFilesCopied.Text = "Files copied: 0";
+            lblFilesSkipped.Text = "Files skipped: 0";
+            lblErrors.Text = "Errors: 0";
 
             try
             {
-                // Count the total number of files across all source folders
-                int totalFiles = 0;
-
-                foreach (string sourceFolder in sourceFolders)
+                // Create an object that receives progress updates from BackupService.
+                // Every time BackupService calls progress.Report(...),
+                // this code runs and updates the Winforms controls.
+                var progress = new Progress<BackupProgress>(p =>
                 {
-                    // Get every file inside the source folder, including files inside all subfolders
-                    totalFiles += Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories).Length;
+                    // Update the progress bar using the total number
+                    // of files and the number already processed
+                    progressBarBackup.Maximum = p.TotalFiles;
+                    progressBarBackup.Value = p.ProcessedFiles;
 
-                }
+                    // Calculate the percentage of the backup that is complete
+                    int percent = p.TotalFiles > 0
+                        ? (int)((double)p.ProcessedFiles / p.TotalFiles * 100)
+                        : 0;
 
+                    // Display the current backup percentage
+                    lblProgressPercent.Text = $"{percent}%";
 
-                // Set up the progress bar based on the total number of files
-                progressBarBackup.Minimum = 0;
-                progressBarBackup.Maximum = totalFiles;
-                progressBarBackup.Value = 0;
+                    // Show how many files have been processed so far
+                    lblStatus.Text =
+                        $"Processing {p.ProcessedFiles} of {p.TotalFiles} files";
 
-                // Update the UI to show that the backup is starting
-                lblStatus.Text = "Starting backup...";
-
-                // Prevent the user from starting another backup while one is already running
-                btnStartBackup.Enabled = false;
-
-                // Counters used for the final backup results
-                int copiedCount = 0;
-                int skippedCount = 0;
-                int scannedCount = 0;
-                
-
-                // Run the file-copying work on a background thread
-                // so the WinForms interface stays responsive
-                await Task.Run(() =>
-                {
-                    // Go through each selected source folder
-                    foreach (string sourceFolder in sourceFolders)
-                    {
-                        // Get the name of the source folder itself
-                        string sourceFolderName = Path.GetFileName(sourceFolder);
-
-                        // Get every file inside the source folder
-                        string[] files = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories);
-
-                        // Go through every file found in the source folder
-                        foreach (string file in files)
-                        {
-                            scannedCount++;
-
-                            // Get the file's path relative to the source folder
-                            string relativePath = Path.GetRelativePath(sourceFolder, file);
-
-                            // Build the matching path inside the backup folder
-                            string destFile = Path.Combine(destinationFolder, sourceFolderName, relativePath);
-
-                            // Get the folder that the destination file belongs in 
-                            string? destDirectory = Path.GetDirectoryName(destFile);
-
-                            // Create the destination folder if it doesn't already exist
-                            if (!string.IsNullOrEmpty(destDirectory))
-                            {
-                                Directory.CreateDirectory(destDirectory);
-                            }
-
-                            // If the file does not exist in the backup yet, copy it
-                            if (!File.Exists(destFile))
-                            {
-                                File.Copy(file, destFile);
-
-                                copiedCount++;
-                            }
-                            else
-                            {
-                                // If the file already exists, compare when each version was last modified
-                                DateTime sourceModified = File.GetLastWriteTime(file);
-                                DateTime destinationModified = File.GetLastWriteTime(destFile);
-
-                                // If the source version is newer, overwrite the backup version
-                                if (sourceModified > destinationModified)
-                                {
-                                    File.Copy(file, destFile, true);
-                                    copiedCount++;
-                                }
-                                else
-                                {
-                                    // Otherwise the file has not been changed so we can skip it
-                                    skippedCount++;
-                                }
-                            }
-
-                            // Task.Run is using a background thread.
-                            // WinForms controls must be updated from the UI thread,
-                            // so Invoke safely updates the progress bar and label.
-                            Invoke(() =>
-                            {
-                                progressBarBackup.Value++;
-
-                                int percent = totalFiles > 0 ? (int)((double)progressBarBackup.Value / totalFiles * 100) : 0;
-
-                                lblProgressPercent.Text = $"{percent}%";
-
-                                lblStatus.Text = $"Processing {progressBarBackup.Value} of {totalFiles} files";
-
-                            });
-
-                        }
-                    }
-
+                    // Update the backup statistics on the form
+                    lblFilesScanned.Text =
+                        $"Files scanned: {p.ProcessedFiles:N0}";
+                    lblFilesCopied.Text =
+                        $"Files copied: {p.CopiedFiles:N0}";
+                    lblFilesSkipped.Text =
+                        $"Files skipped: {p.SkippedFiles:N0}";
+                    lblErrors.Text =
+                        $"Errors: {p.ErrorCount:N0}";
                 });
 
-                // This runs after Task.Run has completely finished
-                lblStatus.Text = "Backup complete!";
+                // Create the service that contains the actual backup logic
+                BackupService backupService = new BackupService();
 
-                lblFilesScanned.Text = $"Files scanned: {scannedCount:N0}";
-                lblFilesCopied.Text = $"Files copied: {copiedCount:N0}";
-                lblFilesSkipped.Text = $"Files skipped: {skippedCount:N0}";
-                lblErrors.Text = $"Errors: {errorCount:N0}";
+                // Start the backup and wait for it to finish.
+                // BackupService handles scanning, comparing, copying, 
+                // skipping, and reporting progress back to this form.
+                await backupService.RunBackupAsync(sourceFolders, destinationFolder, progress);
+
+                // This text will only show once the backup has completed
+                lblStatus.Text = "Backup complete!";
+           
             }
             catch (Exception ex)
-            {
-                errorCount++;
+            {           
                 // If anything goes wrong during backup, show the error instead of crashing the program
                 MessageBox.Show("Backup failed: " + ex.Message);
             }
@@ -212,16 +172,6 @@ namespace BackupUtility
             }
         }
 
-        private void btnRemoveSource_Click(object sender, EventArgs e)
-        {
-            if (listSourceFolders.SelectedItem == null)
-            {
-                MessageBox.Show("Please select a folder to remove.");
-                return;
-            }
-
-            listSourceFolders.Items.Remove(listSourceFolders.SelectedItem);
-        }
 
         
     }

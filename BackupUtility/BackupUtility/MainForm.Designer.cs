@@ -28,18 +28,44 @@
         /// </summary>
         private void InitializeComponent()
         {
+            btnSelectSource = new Button();
+            txtSourcePath = new TextBox();
             SuspendLayout();
             // 
-            // Form1
+            // btnSelectSource
+            // 
+            btnSelectSource.Location = new Point(347, 351);
+            btnSelectSource.Name = "btnSelectSource";
+            btnSelectSource.Size = new Size(112, 27);
+            btnSelectSource.TabIndex = 0;
+            btnSelectSource.Text = "Select Folder";
+            btnSelectSource.UseVisualStyleBackColor = true;
+            btnSelectSource.Click += btnSelectSource_Click;
+            // 
+            // txtSourcePath
+            // 
+            txtSourcePath.Location = new Point(242, 272);
+            txtSourcePath.Name = "txtSourcePath";
+            txtSourcePath.Size = new Size(340, 23);
+            txtSourcePath.TabIndex = 1;
+            // 
+            // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1236, 577);
-            Name = "Form1";
+            Controls.Add(txtSourcePath);
+            Controls.Add(btnSelectSource);
+            Name = "MainForm";
             Text = "Form1";
+            Load += MainForm_Load;
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
+
+        private Button btnSelectSource;
+        private TextBox txtSourcePath;
     }
 }

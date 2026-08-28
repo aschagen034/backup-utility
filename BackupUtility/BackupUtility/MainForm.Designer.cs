@@ -48,6 +48,7 @@
             lblFilesCopied = new Label();
             lblFilesSkipped = new Label();
             lblErrors = new Label();
+            lblLastBackup = new Label();
             sourcePanel.SuspendLayout();
             destinationPanel.SuspendLayout();
             backupProgressPanel.SuspendLayout();
@@ -98,7 +99,7 @@
             sourcePanel.Controls.Add(lblSource);
             sourcePanel.Location = new Point(382, 96);
             sourcePanel.Name = "sourcePanel";
-            sourcePanel.Size = new Size(652, 122);
+            sourcePanel.Size = new Size(652, 120);
             sourcePanel.TabIndex = 11;
             // 
             // btnRemoveSource
@@ -139,7 +140,7 @@
             destinationPanel.Controls.Add(lblDestination);
             destinationPanel.Location = new Point(382, 239);
             destinationPanel.Name = "destinationPanel";
-            destinationPanel.Size = new Size(652, 118);
+            destinationPanel.Size = new Size(652, 120);
             destinationPanel.TabIndex = 12;
             // 
             // btnSelectDestination
@@ -155,9 +156,9 @@
             // 
             // txtDestinationPath
             // 
-            txtDestinationPath.Location = new Point(20, 49);
+            txtDestinationPath.Location = new Point(25, 49);
             txtDestinationPath.Name = "txtDestinationPath";
-            txtDestinationPath.Size = new Size(440, 23);
+            txtDestinationPath.Size = new Size(418, 23);
             txtDestinationPath.TabIndex = 11;
             // 
             // lblDestination
@@ -180,7 +181,7 @@
             backupProgressPanel.Controls.Add(lblBackupProgress);
             backupProgressPanel.Location = new Point(382, 586);
             backupProgressPanel.Name = "backupProgressPanel";
-            backupProgressPanel.Size = new Size(652, 110);
+            backupProgressPanel.Size = new Size(652, 120);
             backupProgressPanel.TabIndex = 13;
             // 
             // lblProgressPercent
@@ -261,12 +262,22 @@
             lblErrors.TabIndex = 18;
             lblErrors.Text = "Errors: 0";
             // 
+            // lblLastBackup
+            // 
+            lblLastBackup.BackColor = SystemColors.ButtonHighlight;
+            lblLastBackup.Location = new Point(848, 554);
+            lblLastBackup.Name = "lblLastBackup";
+            lblLastBackup.Size = new Size(186, 15);
+            lblLastBackup.TabIndex = 19;
+            lblLastBackup.Text = "Last backup:";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Gainsboro;
-            ClientSize = new Size(1425, 746);
+            ClientSize = new Size(1426, 756);
+            Controls.Add(lblLastBackup);
             Controls.Add(lblErrors);
             Controls.Add(lblFilesSkipped);
             Controls.Add(lblFilesCopied);
@@ -311,5 +322,6 @@
         private Label lblFilesCopied;
         private Label lblFilesSkipped;
         private Label lblErrors;
+        private Label lblLastBackup;
     }
 }

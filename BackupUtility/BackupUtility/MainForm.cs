@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace BackupUtility
 {
     public partial class MainForm : Form
@@ -5,7 +7,11 @@ namespace BackupUtility
         public MainForm()
         {
             InitializeComponent();
+
+            LoadLastBackupTime();
         }
+
+        private readonly string settingsFile = "backupSettings.json";
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -173,6 +179,10 @@ namespace BackupUtility
 
                 // This text will only show once the backup has completed
                 lblStatus.Text = "Backup complete!";
+
+                lblLastBackup.Text = $"Last backup: {DateTime.Now:g}";
+
+                SaveLastBackupTime();
            
             }
             catch (Exception ex)
@@ -188,6 +198,36 @@ namespace BackupUtility
             }
         }
 
+        private void SaveLastBackupTime()
+        {
+            BackupSettings settings = new BackupSettings
+            {
+                LastBackup = DateTime.Now
+            };
+
+            string json = JsonSerializer.Serialize(settings);
+
+            File.WriteAllText(settingsFile, json);
+        }
+
+        private void LoadLastBackupTime()
+        {
+            if (!File.Exists(settingsFile))
+            {
+                lblLastBackup.Text = "Last backup: Never";
+                return;
+            }
+
+            string json = File.ReadAllText(settingsFile);
+
+            BackupSettings? settings =
+                JsonSerializer.Deserialize<BackupSettings>(json);
+
+            if (settings?.LastBackup != null)
+            {
+                lblLastBackup.Text = $"Last backup: {settings.LastBackup.Value:g}";
+            }
+        }
 
         
     }

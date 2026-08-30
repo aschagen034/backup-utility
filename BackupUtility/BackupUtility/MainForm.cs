@@ -148,7 +148,7 @@ namespace BackupUtility
                     return;
                 }
 
-                using BackupHistoryForm historyForm = new BackupHistoryForm(history);
+                using BackupHistoryForm historyForm = new BackupHistoryForm(history, historyFile);
                 historyForm.ShowDialog(this);
             }
             catch (Exception ex)

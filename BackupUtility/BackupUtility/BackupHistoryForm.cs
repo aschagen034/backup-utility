@@ -1,10 +1,23 @@
+using System.Text.Json;
+
 namespace BackupUtility
 {
     internal partial class BackupHistoryForm : Form
     {
-        public BackupHistoryForm(List<BackupHistoryEntry> history)
+        private readonly string historyFile;
+
+        public BackupHistoryForm(List<BackupHistoryEntry> history, string historyFile)
         {
             InitializeComponent();
+            this.historyFile = historyFile;
+
+            PopulateHistory(history);
+        }
+
+        private void PopulateHistory(List<BackupHistoryEntry> history)
+        {
+            historyGrid.Rows.Clear();
+            txtDetails.Clear();
 
             // Display the newest completed backup first.
             foreach (BackupHistoryEntry entry in history.OrderByDescending(entry => entry.CompletedAt))
@@ -29,6 +42,32 @@ namespace BackupUtility
                 {
                     DisplayEntryDetails(firstEntry);
                 }
+            }
+            else
+            {
+                txtDetails.Text = "No backup history is available.";
+            }
+        }
+
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                List<BackupHistoryEntry> history = new List<BackupHistoryEntry>();
+
+                if (File.Exists(historyFile))
+                {
+                    string json = File.ReadAllText(historyFile);
+                    history = JsonSerializer.Deserialize<List<BackupHistoryEntry>>(json)
+                        ?? new List<BackupHistoryEntry>();
+                }
+
+                // Reuse the same population logic used when the form first opens.
+                PopulateHistory(history);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The backup history could not be refreshed: " + ex.Message);
             }
         }
 

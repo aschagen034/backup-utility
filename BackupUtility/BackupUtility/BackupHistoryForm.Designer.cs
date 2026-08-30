@@ -27,6 +27,7 @@ namespace BackupUtility
             colErrors = new DataGridViewTextBoxColumn();
             lblDetails = new Label();
             txtDetails = new TextBox();
+            btnRefresh = new Button();
             btnClose = new Button();
             ((System.ComponentModel.ISupportInitialize)historyGrid).BeginInit();
             SuspendLayout();
@@ -115,13 +116,24 @@ namespace BackupUtility
             txtDetails.TabIndex = 3;
             txtDetails.WordWrap = false;
             // 
+            // btnRefresh
+            // 
+            btnRefresh.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            btnRefresh.Location = new Point(24, 550);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new Size(100, 32);
+            btnRefresh.TabIndex = 4;
+            btnRefresh.Text = "Refresh";
+            btnRefresh.UseVisualStyleBackColor = true;
+            btnRefresh.Click += btnRefresh_Click;
+            // 
             // btnClose
             // 
             btnClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnClose.Location = new Point(636, 550);
             btnClose.Name = "btnClose";
             btnClose.Size = new Size(100, 32);
-            btnClose.TabIndex = 4;
+            btnClose.TabIndex = 5;
             btnClose.Text = "Close";
             btnClose.UseVisualStyleBackColor = true;
             btnClose.Click += btnClose_Click;
@@ -133,6 +145,7 @@ namespace BackupUtility
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(760, 603);
             Controls.Add(btnClose);
+            Controls.Add(btnRefresh);
             Controls.Add(txtDetails);
             Controls.Add(lblDetails);
             Controls.Add(historyGrid);
@@ -158,6 +171,7 @@ namespace BackupUtility
         private DataGridViewTextBoxColumn colErrors;
         private Label lblDetails;
         private TextBox txtDetails;
+        private Button btnRefresh;
         private Button btnClose;
     }
 }

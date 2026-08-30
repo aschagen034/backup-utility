@@ -28,6 +28,9 @@ namespace BackupUtility
             "backupHistory.json"
         );
 
+        // Keeps the destination identity that was last loaded from or saved to the profile.
+        private BackupProfile? activeProfile;
+
         private void MainForm_Load(object sender, EventArgs e)
         {
 
@@ -83,6 +86,12 @@ namespace BackupUtility
                     txtDestinationPath.Text = folderDialog.SelectedPath;
                 }
             }
+        }
+
+        private void txtDestinationPath_TextChanged(object sender, EventArgs e)
+        {
+            // A changed path has not been verified against the saved profile yet.
+            ShowDestinationNotConfigured();
         }
 
         /*
@@ -189,6 +198,8 @@ namespace BackupUtility
             });
 
             File.WriteAllText(profileFile, json);
+            activeProfile = profile;
+            UpdateDestinationStatus(profile);
         }
 
         private void LoadBackupProfile()
@@ -219,11 +230,82 @@ namespace BackupUtility
                     listSourceFolders.Items.Add(sourceFolder);
                 }
 
+                activeProfile = profile;
                 txtDestinationPath.Text = profile.DestinationPath ?? string.Empty;
+                UpdateDestinationStatus(profile);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("The saved backup profile could not be loaded: " + ex.Message);
+            }
+        }
+
+        private BackupDestinationDetectionResult? UpdateDestinationStatus(BackupProfile profile)
+        {
+            if (string.IsNullOrWhiteSpace(profile.DestinationMarkerId))
+            {
+                ShowDestinationNotConfigured();
+                return null;
+            }
+
+            BackupDestinationService destinationService = new BackupDestinationService();
+            BackupDestinationDetectionResult result = destinationService.DetectDestination(
+                profile.DestinationMarkerId,
+                profile.DestinationRelativePath
+            );
+
+            lblDestinationStatus.Text = $"Backup Destination Status: {FormatStatus(result.Status)}";
+
+            lblDestinationStatus.ForeColor = result.Status switch
+            {
+                BackupDestinationStatus.Connected => Color.DarkGreen,
+                BackupDestinationStatus.InvalidMarker => Color.DarkOrange,
+                BackupDestinationStatus.NotFound => Color.Firebrick,
+                BackupDestinationStatus.MultipleMatches => Color.Firebrick,
+                _ => Color.DimGray
+            };
+
+            return result;
+        }
+
+        private string FormatStatus(BackupDestinationStatus status)
+        {
+            return status switch
+            {
+                BackupDestinationStatus.NotFound => "Not Found",
+                BackupDestinationStatus.MultipleMatches => "Multiple Matches",
+                BackupDestinationStatus.InvalidMarker => "Invalid Marker",
+                _ => status.ToString()
+            };
+        }
+
+        private void ShowDestinationNotConfigured()
+        {
+            lblDestinationStatus.Text = "Backup Destination Status: Not Configured";
+            lblDestinationStatus.ForeColor = Color.DimGray;
+        }
+
+        private bool DestinationTextMatchesActiveProfile()
+        {
+            if (activeProfile == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                string visiblePath = Path.TrimEndingDirectorySeparator(
+                    Path.GetFullPath(txtDestinationPath.Text)
+                );
+                string savedPath = Path.TrimEndingDirectorySeparator(
+                    Path.GetFullPath(activeProfile.DestinationPath)
+                );
+
+                return visiblePath.Equals(savedPath, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -250,14 +332,50 @@ namespace BackupUtility
                 return;
             }
 
+            if (activeProfile == null ||
+                string.IsNullOrWhiteSpace(activeProfile.DestinationMarkerId))
+            {
+                ShowDestinationNotConfigured();
+                MessageBox.Show(
+                    "Backup cannot start because the destination has not been configured. " +
+                    "Please save the profile first."
+                );
+                return;
+            }
+
+            if (!DestinationTextMatchesActiveProfile())
+            {
+                ShowDestinationNotConfigured();
+                MessageBox.Show(
+                    "Backup cannot start because the destination path has changed. " +
+                    "Please save the profile before starting the backup."
+                );
+                return;
+            }
+
+            // Always perform a fresh check immediately before starting. Do not rely
+            // only on the status that was displayed when the application opened.
+            BackupDestinationDetectionResult? destinationResult =
+                UpdateDestinationStatus(activeProfile);
+
+            if (destinationResult?.Status != BackupDestinationStatus.Connected)
+            {
+                string reason = destinationResult?.Message
+                    ?? "The destination is not configured.";
+
+                MessageBox.Show("Backup cannot start. " + reason);
+                return;
+            }
+
             // Convert all folders currently stored in the ListBox
             // into a normal List<string> that can be passed to BackupService
             List<string> sourceFolders = listSourceFolders.Items
                 .Cast<string>()
                 .ToList();
 
-            // Store the selected destination folder
-            string destinationFolder = txtDestinationPath.Text;
+            // Use the path found by the marker scan. Its drive letter may differ
+            // from the one that was originally saved in the profile.
+            string destinationFolder = destinationResult.ResolvedDestinationPath;
 
             // Reset the progress UI before starting a new backup
             progressBarBackup.Value = 0;

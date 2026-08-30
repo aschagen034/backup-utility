@@ -40,6 +40,7 @@
             destinationPanel = new Panel();
             btnSelectDestination = new Button();
             txtDestinationPath = new TextBox();
+            lblDestinationStatus = new Label();
             lblDestination = new Label();
             backupProgressPanel = new Panel();
             lblProgressPercent = new Label();
@@ -157,6 +158,7 @@
             // destinationPanel
             // 
             destinationPanel.BackColor = Color.DarkGray;
+            destinationPanel.Controls.Add(lblDestinationStatus);
             destinationPanel.Controls.Add(btnSelectDestination);
             destinationPanel.Controls.Add(txtDestinationPath);
             destinationPanel.Controls.Add(lblDestination);
@@ -182,6 +184,18 @@
             txtDestinationPath.Name = "txtDestinationPath";
             txtDestinationPath.Size = new Size(418, 23);
             txtDestinationPath.TabIndex = 11;
+            txtDestinationPath.TextChanged += txtDestinationPath_TextChanged;
+            // 
+            // lblDestinationStatus
+            // 
+            lblDestinationStatus.AutoSize = true;
+            lblDestinationStatus.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblDestinationStatus.ForeColor = Color.DimGray;
+            lblDestinationStatus.Location = new Point(25, 88);
+            lblDestinationStatus.Name = "lblDestinationStatus";
+            lblDestinationStatus.Size = new Size(235, 15);
+            lblDestinationStatus.TabIndex = 13;
+            lblDestinationStatus.Text = "Backup Destination Status: Not Configured";
             // 
             // lblDestination
             // 
@@ -336,6 +350,7 @@
         private Panel destinationPanel;
         private Button btnSelectDestination;
         private TextBox txtDestinationPath;
+        private Label lblDestinationStatus;
         private Label lblDestination;
         private Panel backupProgressPanel;
         private Label lblStatus;

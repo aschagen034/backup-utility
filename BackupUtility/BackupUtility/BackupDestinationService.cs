@@ -129,6 +129,10 @@ namespace BackupUtility
                             matchingDestinations.Add(candidateDestination);
                         }
                     }
+                    catch (InvalidDataException)
+                    {
+                        invalidMarkerFound = true;
+                    }
                     catch (IOException)
                     {
                         invalidMarkerFound = true;

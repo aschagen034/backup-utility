@@ -22,6 +22,12 @@ namespace BackupUtility
             "backupProfile.json"
         );
 
+        private readonly string historyFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "BackupUtility",
+            "backupHistory.json"
+        );
+
         private void MainForm_Load(object sender, EventArgs e)
         {
 
@@ -286,9 +292,32 @@ namespace BackupUtility
                 lblFilesSkipped.Text = $"Files skipped: {result.SkippedFiles:N0}";
                 lblErrors.Text = $"Errors: {result.ErrorCount:N0}";
 
-                lblLastBackup.Text = $"Last backup: {DateTime.Now:g}";
+                DateTime completedAt = DateTime.Now;
+
+                lblLastBackup.Text = $"Last backup: {completedAt:g}";
 
                 SaveLastBackupTime();
+
+                try
+                {
+                    SaveBackupHistoryEntry(new BackupHistoryEntry
+                    {
+                        CompletedAt = completedAt,
+                        SourceFolders = new List<string>(sourceFolders),
+                        DestinationPath = destinationFolder,
+                        FilesScanned = result.ProcessedFiles,
+                        FilesCopied = result.CopiedFiles,
+                        FilesSkipped = result.SkippedFiles,
+                        ErrorCount = result.ErrorCount
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // The backup itself succeeded even if its history could not be saved.
+                    MessageBox.Show(
+                        "The backup completed, but its history could not be saved: " + ex.Message
+                    );
+                }
            
             }
             catch (Exception ex)
@@ -314,6 +343,36 @@ namespace BackupUtility
             string json = JsonSerializer.Serialize(settings);
 
             File.WriteAllText(settingsFile, json);
+        }
+
+        private void SaveBackupHistoryEntry(BackupHistoryEntry newEntry)
+        {
+            List<BackupHistoryEntry> history = new List<BackupHistoryEntry>();
+
+            if (File.Exists(historyFile))
+            {
+                string existingJson = File.ReadAllText(historyFile);
+
+                // The history file contains a JSON array, so deserialize it into a list.
+                history = JsonSerializer.Deserialize<List<BackupHistoryEntry>>(existingJson)
+                    ?? new List<BackupHistoryEntry>();
+            }
+
+            history.Add(newEntry);
+
+            string? historyDirectory = Path.GetDirectoryName(historyFile);
+
+            if (!string.IsNullOrEmpty(historyDirectory))
+            {
+                Directory.CreateDirectory(historyDirectory);
+            }
+
+            string json = JsonSerializer.Serialize(history, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            File.WriteAllText(historyFile, json);
         }
 
         private void LoadLastBackupTime()

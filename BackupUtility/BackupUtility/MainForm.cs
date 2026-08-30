@@ -127,6 +127,36 @@ namespace BackupUtility
             }
         }
 
+        private void btnViewHistory_Click(object sender, EventArgs e)
+        {
+            if (!File.Exists(historyFile))
+            {
+                MessageBox.Show("No backup history is available yet.");
+                return;
+            }
+
+            try
+            {
+                string json = File.ReadAllText(historyFile);
+                List<BackupHistoryEntry> history =
+                    JsonSerializer.Deserialize<List<BackupHistoryEntry>>(json)
+                    ?? new List<BackupHistoryEntry>();
+
+                if (history.Count == 0)
+                {
+                    MessageBox.Show("No backup history is available yet.");
+                    return;
+                }
+
+                using BackupHistoryForm historyForm = new BackupHistoryForm(history);
+                historyForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The backup history could not be loaded: " + ex.Message);
+            }
+        }
+
         private void SaveBackupProfile()
         {
             BackupProfile profile = new BackupProfile

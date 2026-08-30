@@ -30,6 +30,7 @@
         {
             btnAddSource = new Button();
             btnSaveProfile = new Button();
+            btnViewHistory = new Button();
             btnStartBackup = new Button();
             lblTitle = new Label();
             sourcePanel = new Panel();
@@ -74,6 +75,16 @@
             btnSaveProfile.Text = "Save Profile";
             btnSaveProfile.UseVisualStyleBackColor = true;
             btnSaveProfile.Click += btnSaveProfile_Click;
+            // 
+            // btnViewHistory
+            // 
+            btnViewHistory.Location = new Point(875, 377);
+            btnViewHistory.Name = "btnViewHistory";
+            btnViewHistory.Size = new Size(129, 40);
+            btnViewHistory.TabIndex = 5;
+            btnViewHistory.Text = "View History";
+            btnViewHistory.UseVisualStyleBackColor = true;
+            btnViewHistory.Click += btnViewHistory_Click;
             // 
             // btnStartBackup
             // 
@@ -297,6 +308,7 @@
             Controls.Add(destinationPanel);
             Controls.Add(sourcePanel);
             Controls.Add(lblTitle);
+            Controls.Add(btnViewHistory);
             Controls.Add(btnSaveProfile);
             Controls.Add(btnStartBackup);
             Name = "MainForm";
@@ -316,6 +328,7 @@
 
         private Button btnAddSource;
         private Button btnSaveProfile;
+        private Button btnViewHistory;
         private Button btnStartBackup;
         private Label lblTitle;
         private Panel sourcePanel;

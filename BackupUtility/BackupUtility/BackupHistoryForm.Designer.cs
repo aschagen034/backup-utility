@@ -25,6 +25,8 @@ namespace BackupUtility
             colCopied = new DataGridViewTextBoxColumn();
             colSkipped = new DataGridViewTextBoxColumn();
             colErrors = new DataGridViewTextBoxColumn();
+            lblDetails = new Label();
+            txtDetails = new TextBox();
             btnClose = new Button();
             ((System.ComponentModel.ISupportInitialize)historyGrid).BeginInit();
             SuspendLayout();
@@ -54,8 +56,9 @@ namespace BackupUtility
             historyGrid.ReadOnly = true;
             historyGrid.RowHeadersVisible = false;
             historyGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            historyGrid.Size = new Size(712, 311);
+            historyGrid.Size = new Size(712, 248);
             historyGrid.TabIndex = 1;
+            historyGrid.SelectionChanged += historyGrid_SelectionChanged;
             // 
             // colCompleted
             // 
@@ -88,13 +91,37 @@ namespace BackupUtility
             colErrors.Name = "colErrors";
             colErrors.ReadOnly = true;
             // 
+            // lblDetails
+            // 
+            lblDetails.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            lblDetails.AutoSize = true;
+            lblDetails.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblDetails.Location = new Point(24, 327);
+            lblDetails.Name = "lblDetails";
+            lblDetails.Size = new Size(125, 19);
+            lblDetails.TabIndex = 2;
+            lblDetails.Text = "Selected Run Details";
+            // 
+            // txtDetails
+            // 
+            txtDetails.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            txtDetails.BackColor = SystemColors.Window;
+            txtDetails.Location = new Point(24, 352);
+            txtDetails.Multiline = true;
+            txtDetails.Name = "txtDetails";
+            txtDetails.ReadOnly = true;
+            txtDetails.ScrollBars = ScrollBars.Both;
+            txtDetails.Size = new Size(712, 181);
+            txtDetails.TabIndex = 3;
+            txtDetails.WordWrap = false;
+            // 
             // btnClose
             // 
             btnClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnClose.Location = new Point(636, 392);
+            btnClose.Location = new Point(636, 550);
             btnClose.Name = "btnClose";
             btnClose.Size = new Size(100, 32);
-            btnClose.TabIndex = 2;
+            btnClose.TabIndex = 4;
             btnClose.Text = "Close";
             btnClose.UseVisualStyleBackColor = true;
             btnClose.Click += btnClose_Click;
@@ -104,12 +131,14 @@ namespace BackupUtility
             AcceptButton = btnClose;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(760, 445);
+            ClientSize = new Size(760, 603);
             Controls.Add(btnClose);
+            Controls.Add(txtDetails);
+            Controls.Add(lblDetails);
             Controls.Add(historyGrid);
             Controls.Add(lblTitle);
             MinimizeBox = false;
-            MinimumSize = new Size(620, 360);
+            MinimumSize = new Size(620, 500);
             Name = "BackupHistoryForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Backup History";
@@ -127,6 +156,8 @@ namespace BackupUtility
         private DataGridViewTextBoxColumn colCopied;
         private DataGridViewTextBoxColumn colSkipped;
         private DataGridViewTextBoxColumn colErrors;
+        private Label lblDetails;
+        private TextBox txtDetails;
         private Button btnClose;
     }
 }

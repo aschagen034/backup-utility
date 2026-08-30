@@ -13,6 +13,14 @@ namespace BackupUtility
 
         private readonly string settingsFile = "backupSettings.json";
 
+        // LocalApplicationData is a stable, per-user location for application files.
+        // This avoids relying on whichever folder the program was launched from.
+        private readonly string profileFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "BackupUtility",
+            "backupProfile.json"
+        );
+
         private void MainForm_Load(object sender, EventArgs e)
         {
 
@@ -85,6 +93,56 @@ namespace BackupUtility
 
             // Remove the selected folder from the list of source folders
             listSourceFolders.Items.Remove(listSourceFolders.SelectedItem);
+        }
+
+        private void btnSaveProfile_Click(object sender, EventArgs e)
+        {
+            if (listSourceFolders.Items.Count == 0)
+            {
+                MessageBox.Show("Please add at least one source folder before saving the profile.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtDestinationPath.Text))
+            {
+                MessageBox.Show("Please select a destination folder before saving the profile.");
+                return;
+            }
+
+            try
+            {
+                SaveBackupProfile();
+                MessageBox.Show("Backup profile saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The backup profile could not be saved: " + ex.Message);
+            }
+        }
+
+        private void SaveBackupProfile()
+        {
+            BackupProfile profile = new BackupProfile
+            {
+                SourceFolders = listSourceFolders.Items.Cast<string>().ToList(),
+                DestinationPath = txtDestinationPath.Text
+            };
+
+            string? profileDirectory = Path.GetDirectoryName(profileFile);
+
+            if (!string.IsNullOrEmpty(profileDirectory))
+            {
+                Directory.CreateDirectory(profileDirectory);
+            }
+
+            // WriteIndented makes the saved JSON easier to read
+            // and if the profile file needs to be inspected during testing.
+            string json = JsonSerializer.Serialize(profile, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            File.WriteAllText(profileFile, json);
         }
 
         /*

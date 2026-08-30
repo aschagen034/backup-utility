@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             btnAddSource = new Button();
+            btnSaveProfile = new Button();
             btnStartBackup = new Button();
             lblTitle = new Label();
             sourcePanel = new Panel();
@@ -64,13 +65,23 @@
             btnAddSource.UseVisualStyleBackColor = true;
             btnAddSource.Click += btnAddSource_Click;
             // 
+            // btnSaveProfile
+            // 
+            btnSaveProfile.Location = new Point(411, 378);
+            btnSaveProfile.Name = "btnSaveProfile";
+            btnSaveProfile.Size = new Size(129, 40);
+            btnSaveProfile.TabIndex = 3;
+            btnSaveProfile.Text = "Save Profile";
+            btnSaveProfile.UseVisualStyleBackColor = true;
+            btnSaveProfile.Click += btnSaveProfile_Click;
+            // 
             // btnStartBackup
             // 
             btnStartBackup.BackColor = SystemColors.Desktop;
             btnStartBackup.FlatStyle = FlatStyle.Flat;
             btnStartBackup.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnStartBackup.ForeColor = SystemColors.Control;
-            btnStartBackup.Location = new Point(644, 378);
+            btnStartBackup.Location = new Point(649, 377);
             btnStartBackup.Name = "btnStartBackup";
             btnStartBackup.Size = new Size(129, 40);
             btnStartBackup.TabIndex = 4;
@@ -286,6 +297,7 @@
             Controls.Add(destinationPanel);
             Controls.Add(sourcePanel);
             Controls.Add(lblTitle);
+            Controls.Add(btnSaveProfile);
             Controls.Add(btnStartBackup);
             Name = "MainForm";
             Text = "Backup Utility";
@@ -303,6 +315,7 @@
         #endregion
 
         private Button btnAddSource;
+        private Button btnSaveProfile;
         private Button btnStartBackup;
         private Label lblTitle;
         private Panel sourcePanel;

@@ -54,6 +54,136 @@ namespace BackupUtility
             return relativePath == "." ? string.Empty : relativePath;
         }
 
+        public BackupDestinationDetectionResult DetectDestination(
+            string expectedMarkerId,
+            string destinationRelativePath)
+        {
+            if (!Guid.TryParse(expectedMarkerId, out Guid expectedId))
+            {
+                return new BackupDestinationDetectionResult
+                {
+                    Status = BackupDestinationStatus.InvalidMarker,
+                    Message = "The saved profile does not contain a valid destination marker ID."
+                };
+            }
+
+            if (Path.IsPathRooted(destinationRelativePath))
+            {
+                return new BackupDestinationDetectionResult
+                {
+                    Status = BackupDestinationStatus.InvalidMarker,
+                    Message = "The saved destination-relative path is invalid."
+                };
+            }
+
+            List<string> matchingDestinations = new List<string>();
+            bool invalidMarkerFound = false;
+
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
+            {
+                try
+                {
+                    // External SSDs may be reported as Fixed or Removable depending
+                    // on their enclosure and driver, so support both drive types.
+                    if (!drive.IsReady ||
+                        (drive.DriveType != DriveType.Fixed &&
+                         drive.DriveType != DriveType.Removable))
+                    {
+                        continue;
+                    }
+
+                    string driveRoot = drive.RootDirectory.FullName;
+                    string candidateDestination = Path.GetFullPath(
+                        Path.Combine(driveRoot, destinationRelativePath)
+                    );
+
+                    // Protect against a manually edited relative path containing "..".
+                    if (!candidateDestination.StartsWith(
+                        driveRoot,
+                        StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new BackupDestinationDetectionResult
+                        {
+                            Status = BackupDestinationStatus.InvalidMarker,
+                            Message = "The saved destination-relative path is invalid."
+                        };
+                    }
+
+                    string candidateMarker = Path.Combine(
+                        candidateDestination,
+                        MarkerFileName
+                    );
+
+                    if (!File.Exists(candidateMarker))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        string markerId = ReadValidMarkerId(candidateMarker);
+
+                        if (Guid.TryParse(markerId, out Guid foundId) &&
+                            foundId == expectedId)
+                        {
+                            matchingDestinations.Add(candidateDestination);
+                        }
+                    }
+                    catch (IOException)
+                    {
+                        invalidMarkerFound = true;
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        invalidMarkerFound = true;
+                    }
+                }
+                catch (IOException)
+                {
+                    // A drive can be disconnected while it is being inspected.
+                    // Skip it and continue checking the remaining drives.
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // An inaccessible drive cannot be used as the backup destination.
+                }
+            }
+
+            if (matchingDestinations.Count > 1)
+            {
+                return new BackupDestinationDetectionResult
+                {
+                    Status = BackupDestinationStatus.MultipleMatches,
+                    Message = "Multiple matching backup destinations were found."
+                };
+            }
+
+            if (matchingDestinations.Count == 1)
+            {
+                return new BackupDestinationDetectionResult
+                {
+                    Status = BackupDestinationStatus.Connected,
+                    ResolvedDestinationPath = matchingDestinations[0],
+                    Message = "Backup destination connected."
+                };
+            }
+
+            if (invalidMarkerFound)
+            {
+                return new BackupDestinationDetectionResult
+                {
+                    Status = BackupDestinationStatus.InvalidMarker,
+                    Message = "A backup destination marker was found but could not be validated."
+                };
+            }
+
+            return new BackupDestinationDetectionResult
+            {
+                Status = BackupDestinationStatus.NotFound,
+                Message = "Backup destination not found."
+            };
+        }
+
         private string ReadValidMarkerId(string markerFile)
         {
             try

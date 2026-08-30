@@ -28,6 +28,7 @@ namespace BackupUtility
             lblDetails = new Label();
             txtDetails = new TextBox();
             btnRefresh = new Button();
+            btnClearHistory = new Button();
             btnClose = new Button();
             ((System.ComponentModel.ISupportInitialize)historyGrid).BeginInit();
             SuspendLayout();
@@ -127,13 +128,24 @@ namespace BackupUtility
             btnRefresh.UseVisualStyleBackColor = true;
             btnRefresh.Click += btnRefresh_Click;
             // 
+            // btnClearHistory
+            // 
+            btnClearHistory.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            btnClearHistory.Location = new Point(140, 550);
+            btnClearHistory.Name = "btnClearHistory";
+            btnClearHistory.Size = new Size(125, 32);
+            btnClearHistory.TabIndex = 5;
+            btnClearHistory.Text = "Clear All History";
+            btnClearHistory.UseVisualStyleBackColor = true;
+            btnClearHistory.Click += btnClearHistory_Click;
+            // 
             // btnClose
             // 
             btnClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnClose.Location = new Point(636, 550);
             btnClose.Name = "btnClose";
             btnClose.Size = new Size(100, 32);
-            btnClose.TabIndex = 5;
+            btnClose.TabIndex = 6;
             btnClose.Text = "Close";
             btnClose.UseVisualStyleBackColor = true;
             btnClose.Click += btnClose_Click;
@@ -145,6 +157,7 @@ namespace BackupUtility
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(760, 603);
             Controls.Add(btnClose);
+            Controls.Add(btnClearHistory);
             Controls.Add(btnRefresh);
             Controls.Add(txtDetails);
             Controls.Add(lblDetails);
@@ -172,6 +185,7 @@ namespace BackupUtility
         private Label lblDetails;
         private TextBox txtDetails;
         private Button btnRefresh;
+        private Button btnClearHistory;
         private Button btnClose;
     }
 }

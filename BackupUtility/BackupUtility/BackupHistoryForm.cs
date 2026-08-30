@@ -71,6 +71,42 @@ namespace BackupUtility
             }
         }
 
+        private void btnClearHistory_Click(object sender, EventArgs e)
+        {
+            DialogResult confirmation = MessageBox.Show(
+                "Permanently clear all backup history?\n\nThis action cannot be undone.",
+                "Clear Backup History",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2
+            );
+
+            if (confirmation != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                string? historyDirectory = Path.GetDirectoryName(historyFile);
+
+                if (!string.IsNullOrEmpty(historyDirectory))
+                {
+                    Directory.CreateDirectory(historyDirectory);
+                }
+
+                // Keep a valid but empty JSON array instead of deleting the file.
+                File.WriteAllText(historyFile, "[]");
+                PopulateHistory(new List<BackupHistoryEntry>());
+
+                MessageBox.Show("Backup history has been cleared.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The backup history could not be cleared: " + ex.Message);
+            }
+        }
+
         private void historyGrid_SelectionChanged(object sender, EventArgs e)
         {
             if (historyGrid.CurrentRow?.Tag is BackupHistoryEntry selectedEntry)

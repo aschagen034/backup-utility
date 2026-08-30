@@ -308,7 +308,8 @@ namespace BackupUtility
                         FilesScanned = result.ProcessedFiles,
                         FilesCopied = result.CopiedFiles,
                         FilesSkipped = result.SkippedFiles,
-                        ErrorCount = result.ErrorCount
+                        ErrorCount = result.ErrorCount,
+                        FailedFiles = new List<BackupError>(result.FailedFiles)
                     });
                 }
                 catch (Exception ex)

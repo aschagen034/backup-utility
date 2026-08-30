@@ -13,5 +13,6 @@ namespace BackupUtility
         public int CopiedFiles { get; set; }
         public int SkippedFiles { get; set; }
         public int ErrorCount { get; set; }
+        public List<BackupError> FailedFiles { get; set; } = new List<BackupError>();
     }
 }

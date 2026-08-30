@@ -18,6 +18,7 @@ namespace BackupUtility
                 int copiedCount = 0;
                 int skippedCount = 0;
                 int errorCount = 0;
+                List<BackupError> failedFiles = new List<BackupError>();
 
                 // Count the total number of files across all source folders
                 int totalFiles = 0;
@@ -88,11 +89,16 @@ namespace BackupUtility
                                 }
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // If an error occurs while processing a file, increase
-                            // the error counter and continue with the next file
+                            // the error counter, remember the details, and continue.
                             errorCount++;
+                            failedFiles.Add(new BackupError
+                            {
+                                FilePath = file,
+                                ErrorMessage = ex.Message
+                            });
                         }
 
                         // Send the current backup statistics back to MainForm.
@@ -118,7 +124,8 @@ namespace BackupUtility
                     TotalFiles = totalFiles,
                     CopiedFiles = copiedCount,
                     SkippedFiles = skippedCount,
-                    ErrorCount = errorCount
+                    ErrorCount = errorCount,
+                    FailedFiles = failedFiles
                 };
             });
         }

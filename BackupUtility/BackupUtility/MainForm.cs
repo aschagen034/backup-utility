@@ -159,10 +159,19 @@ namespace BackupUtility
 
         private void SaveBackupProfile()
         {
+            string fullDestinationPath = Path.GetFullPath(txtDestinationPath.Text);
+            BackupDestinationService destinationService = new BackupDestinationService();
+
+            string markerId = destinationService.GetOrCreateMarkerId(fullDestinationPath);
+            string relativePath =
+                destinationService.GetDestinationRelativePath(fullDestinationPath);
+
             BackupProfile profile = new BackupProfile
             {
                 SourceFolders = listSourceFolders.Items.Cast<string>().ToList(),
-                DestinationPath = txtDestinationPath.Text
+                DestinationPath = fullDestinationPath,
+                DestinationMarkerId = markerId,
+                DestinationRelativePath = relativePath
             };
 
             string? profileDirectory = Path.GetDirectoryName(profileFile);

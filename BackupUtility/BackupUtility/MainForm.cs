@@ -9,6 +9,7 @@ namespace BackupUtility
             InitializeComponent();
 
             LoadLastBackupTime();
+            LoadBackupProfile();
         }
 
         private readonly string settingsFile = "backupSettings.json";
@@ -143,6 +144,42 @@ namespace BackupUtility
             });
 
             File.WriteAllText(profileFile, json);
+        }
+
+        private void LoadBackupProfile()
+        {
+            // A missing file simply means the user has not saved a profile yet.
+            if (!File.Exists(profileFile))
+            {
+                return;
+            }
+
+            try
+            {
+                string json = File.ReadAllText(profileFile);
+                BackupProfile? profile = JsonSerializer.Deserialize<BackupProfile>(json);
+
+                if (profile == null)
+                {
+                    return;
+                }
+
+                listSourceFolders.Items.Clear();
+
+                // Distinct uses the same case-insensitive behavior as the Add Folder button.
+                foreach (string sourceFolder in profile.SourceFolders
+                    .Where(folder => !string.IsNullOrWhiteSpace(folder))
+                    .Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    listSourceFolders.Items.Add(sourceFolder);
+                }
+
+                txtDestinationPath.Text = profile.DestinationPath ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The saved backup profile could not be loaded: " + ex.Message);
+            }
         }
 
         /*

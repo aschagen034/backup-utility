@@ -8,11 +8,11 @@ namespace BackupUtility
 {
     internal class BackupService
     {
-        public async Task RunBackupAsync(List<string> sourceFolders, string destinationFolder, IProgress<BackupProgress> progress)
+        public async Task<BackupProgress> RunBackupAsync(List<string> sourceFolders, string destinationFolder, IProgress<BackupProgress> progress)
         {
             // Run the file-copying work on a background thread
             // so the WinForms interface stays responsive
-            await Task.Run(() =>
+            return await Task.Run(() =>
             {
                 int scannedCount = 0;
                 int copiedCount = 0;
@@ -110,6 +110,16 @@ namespace BackupUtility
                     }
                 }
 
+                // Return one final snapshot after all files have been processed.
+                // MainForm can use this reliable result after awaiting the backup.
+                return new BackupProgress
+                {
+                    ProcessedFiles = scannedCount,
+                    TotalFiles = totalFiles,
+                    CopiedFiles = copiedCount,
+                    SkippedFiles = skippedCount,
+                    ErrorCount = errorCount
+                };
             });
         }
     }

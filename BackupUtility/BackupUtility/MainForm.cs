@@ -270,10 +270,21 @@ namespace BackupUtility
                 // Start the backup and wait for it to finish.
                 // BackupService handles scanning, comparing, copying, 
                 // skipping, and reporting progress back to this form.
-                await backupService.RunBackupAsync(sourceFolders, destinationFolder, progress);
+                BackupProgress result = await backupService.RunBackupAsync(
+                    sourceFolders,
+                    destinationFolder,
+                    progress
+                );
 
                 // This text will only show once the backup has completed
                 lblStatus.Text = "Backup complete!";
+
+                // Use the completed result for the final summary. Progress updates
+                // are still used while the backup is running.
+                lblFilesScanned.Text = $"Files scanned: {result.ProcessedFiles:N0}";
+                lblFilesCopied.Text = $"Files copied: {result.CopiedFiles:N0}";
+                lblFilesSkipped.Text = $"Files skipped: {result.SkippedFiles:N0}";
+                lblErrors.Text = $"Errors: {result.ErrorCount:N0}";
 
                 lblLastBackup.Text = $"Last backup: {DateTime.Now:g}";
 

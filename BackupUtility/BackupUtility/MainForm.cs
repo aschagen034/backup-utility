@@ -10,6 +10,7 @@ namespace BackupUtility
 
             LoadLastBackupTime();
             LoadBackupProfile();
+            destinationStatusTimer.Start();
         }
 
         private readonly string settingsFile = "backupSettings.json";
@@ -92,6 +93,28 @@ namespace BackupUtility
         {
             // A changed path has not been verified against the saved profile yet.
             ShowDestinationNotConfigured();
+        }
+
+        private void destinationStatusTimer_Tick(object sender, EventArgs e)
+        {
+            // The pre-backup check already protects a running backup. Pausing these
+            // display-only checks avoids unnecessary drive scans during processing.
+            if (!btnStartBackup.Enabled)
+            {
+                return;
+            }
+
+            if (activeProfile == null ||
+                string.IsNullOrWhiteSpace(activeProfile.DestinationMarkerId) ||
+                !DestinationTextMatchesActiveProfile())
+            {
+                ShowDestinationNotConfigured();
+                return;
+            }
+
+            // A WinForms timer runs ticks one at a time on the UI thread, so checks
+            // cannot overlap with one another.
+            UpdateDestinationStatus(activeProfile);
         }
 
         /*

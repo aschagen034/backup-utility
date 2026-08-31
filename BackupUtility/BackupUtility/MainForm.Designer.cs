@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             btnAddSource = new Button();
             btnSaveProfile = new Button();
             btnViewHistory = new Button();
@@ -38,9 +39,9 @@
             listSourceFolders = new ListBox();
             lblSource = new Label();
             destinationPanel = new Panel();
+            lblDestinationStatus = new Label();
             btnSelectDestination = new Button();
             txtDestinationPath = new TextBox();
-            lblDestinationStatus = new Label();
             lblDestination = new Label();
             backupProgressPanel = new Panel();
             lblProgressPercent = new Label();
@@ -52,6 +53,7 @@
             lblFilesSkipped = new Label();
             lblErrors = new Label();
             lblLastBackup = new Label();
+            destinationStatusTimer = new System.Windows.Forms.Timer(components);
             sourcePanel.SuspendLayout();
             destinationPanel.SuspendLayout();
             backupProgressPanel.SuspendLayout();
@@ -167,6 +169,17 @@
             destinationPanel.Size = new Size(652, 120);
             destinationPanel.TabIndex = 12;
             // 
+            // lblDestinationStatus
+            // 
+            lblDestinationStatus.AutoSize = true;
+            lblDestinationStatus.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblDestinationStatus.ForeColor = Color.DimGray;
+            lblDestinationStatus.Location = new Point(25, 88);
+            lblDestinationStatus.Name = "lblDestinationStatus";
+            lblDestinationStatus.Size = new Size(245, 15);
+            lblDestinationStatus.TabIndex = 13;
+            lblDestinationStatus.Text = "Backup Destination Status: Not Configured";
+            // 
             // btnSelectDestination
             // 
             btnSelectDestination.Location = new Point(493, 47);
@@ -185,17 +198,6 @@
             txtDestinationPath.Size = new Size(418, 23);
             txtDestinationPath.TabIndex = 11;
             txtDestinationPath.TextChanged += txtDestinationPath_TextChanged;
-            // 
-            // lblDestinationStatus
-            // 
-            lblDestinationStatus.AutoSize = true;
-            lblDestinationStatus.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblDestinationStatus.ForeColor = Color.DimGray;
-            lblDestinationStatus.Location = new Point(25, 88);
-            lblDestinationStatus.Name = "lblDestinationStatus";
-            lblDestinationStatus.Size = new Size(235, 15);
-            lblDestinationStatus.TabIndex = 13;
-            lblDestinationStatus.Text = "Backup Destination Status: Not Configured";
             // 
             // lblDestination
             // 
@@ -307,6 +309,11 @@
             lblLastBackup.TabIndex = 19;
             lblLastBackup.Text = "Last backup:";
             // 
+            // destinationStatusTimer
+            // 
+            destinationStatusTimer.Interval = 2000;
+            destinationStatusTimer.Tick += destinationStatusTimer_Tick;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -364,5 +371,6 @@
         private Label lblFilesSkipped;
         private Label lblErrors;
         private Label lblLastBackup;
+        private System.Windows.Forms.Timer destinationStatusTimer;
     }
 }

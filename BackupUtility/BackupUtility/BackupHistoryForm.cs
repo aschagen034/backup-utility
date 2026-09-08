@@ -4,8 +4,14 @@ namespace BackupUtility
 {
     internal partial class BackupHistoryForm : Form
     {
+        // Store the history file location so the Refresh and Clear buttons
+        // can read from or write to the same JSON file used by MainForm
         private readonly string historyFile;
 
+        /*
+            Creates the history window using the entries that MainForm already loaded.
+            The file path is saved so this form can refresh or clear the history later.
+        */
         public BackupHistoryForm(List<BackupHistoryEntry> history, string historyFile)
         {
             InitializeComponent();
@@ -14,12 +20,17 @@ namespace BackupUtility
             PopulateHistory(history);
         }
 
+        /*
+            Rebuilds the read-only history table from a list of backup entries.
+            It also selects the newest entry and displays its full details.
+        */
         private void PopulateHistory(List<BackupHistoryEntry> history)
         {
+            // Remove any old rows and details before rebuilding the display
             historyGrid.Rows.Clear();
             txtDetails.Clear();
 
-            // Display the newest completed backup first.
+            // Display the newest completed backup first
             foreach (BackupHistoryEntry entry in history.OrderByDescending(entry => entry.CompletedAt))
             {
                 int rowIndex = historyGrid.Rows.Add(
@@ -30,14 +41,16 @@ namespace BackupUtility
                     entry.ErrorCount
                 );
 
-                // Tag lets each visual row keep a reference to its full history entry.
+                // Tag lets each visual row keep a reference to its full history entry
                 historyGrid.Rows[rowIndex].Tag = entry;
             }
 
             if (historyGrid.Rows.Count > 0)
             {
+                // Select the first row, which represents the newest backup
                 historyGrid.CurrentCell = historyGrid.Rows[0].Cells[0];
 
+                // Retrieve the complete history entry stored in the row's Tag
                 if (historyGrid.Rows[0].Tag is BackupHistoryEntry firstEntry)
                 {
                     DisplayEntryDetails(firstEntry);
@@ -49,6 +62,10 @@ namespace BackupUtility
             }
         }
 
+        /*
+            Reloads backup history from the JSON file when the user clicks Refresh.
+            If the file is missing or empty, the form displays an empty history list.
+        */
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             try
@@ -62,7 +79,7 @@ namespace BackupUtility
                         ?? new List<BackupHistoryEntry>();
                 }
 
-                // Reuse the same population logic used when the form first opens.
+                // Reuse the same population logic used when the form first opens
                 PopulateHistory(history);
             }
             catch (Exception ex)
@@ -71,8 +88,13 @@ namespace BackupUtility
             }
         }
 
+        /*
+            Clears all saved backup history after the user confirms the action.
+            Choosing No leaves both the JSON file and the displayed rows unchanged.
+        */
         private void btnClearHistory_Click(object sender, EventArgs e)
         {
+            // Button2 makes No the default choice to reduce accidental deletion.
             DialogResult confirmation = MessageBox.Show(
                 "Permanently clear all backup history?\n\nThis action cannot be undone.",
                 "Clear Backup History",
@@ -88,6 +110,7 @@ namespace BackupUtility
 
             try
             {
+                // Ensure the history folder exists before writing the empty JSON list.
                 string? historyDirectory = Path.GetDirectoryName(historyFile);
 
                 if (!string.IsNullOrEmpty(historyDirectory))
@@ -107,6 +130,10 @@ namespace BackupUtility
             }
         }
 
+        /*
+            Updates the details area whenever the user selects a different table row.
+            The row's Tag contains the complete BackupHistoryEntry for that row.
+        */
         private void historyGrid_SelectionChanged(object sender, EventArgs e)
         {
             if (historyGrid.CurrentRow?.Tag is BackupHistoryEntry selectedEntry)
@@ -115,8 +142,14 @@ namespace BackupUtility
             }
         }
 
+        /*
+            Formats one backup entry as readable lines containing its time,
+            source folders, destination, and any individual file errors.
+        */
         private void DisplayEntryDetails(BackupHistoryEntry entry)
         {
+            // Build the text one line at a time so lists of folders and errors
+            // can be added without creating one large formatted string.
             List<string> detailLines = new List<string>
             {
                 $"Completed: {entry.CompletedAt:g}",
@@ -144,9 +177,11 @@ namespace BackupUtility
                 }
             }
 
+            // Assigning Lines displays each string as a separate line in the TextBox.
             txtDetails.Lines = detailLines.ToArray();
         }
 
+        // Close only the history window and return the user to MainForm.
         private void btnClose_Click(object sender, EventArgs e)
         {
             Close();

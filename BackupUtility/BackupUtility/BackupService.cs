@@ -8,6 +8,12 @@ namespace BackupUtility
 {
     internal class BackupService
     {
+        /*
+            Runs the backup asynchronously across all selected source folders.
+            It copies new or updated files, skips unchanged files, preserves folder
+            structure, reports live progress, and returns the final backup results.
+            Individual file errors are recorded without stopping the remaining backup.
+        */
         public async Task<BackupProgress> RunBackupAsync(List<string> sourceFolders, string destinationFolder, IProgress<BackupProgress> progress)
         {
             // Run the file-copying work on a background thread

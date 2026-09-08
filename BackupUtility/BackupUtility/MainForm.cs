@@ -8,21 +8,33 @@ namespace BackupUtility
         {
             InitializeComponent();
 
+            // Restore the time of the most recent successful backup
             LoadLastBackupTime();
+
+            // Restore the saved source folders and destination, then check
+            // whether the configured backup destination is currently available.
             LoadBackupProfile();
+
+            // Begin checking the destination status at the timer's configured interval.
             destinationStatusTimer.Start();
         }
 
+        // Store the most recent successful backup time in a small settings file
+        // Because this is a relative path, its exact location depends on the folder
+        // from which BackupUtility is launched
         private readonly string settingsFile = "backupSettings.json";
 
-        // LocalApplicationData is a stable, per-user location for application files.
-        // This avoids relying on whichever folder the program was launched from.
+        // Store the default backup profile in the current user's Local AppData folder.
+        // This provides a stable, per-user location that does not depend on where
+        // the application executable was launched.
         private readonly string profileFile = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BackupUtility",
             "backupProfile.json"
         );
 
+        // Store all completed backup-history entries in the same stable,
+        // per-user BackupUtility application-data folder.
         private readonly string historyFile = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BackupUtility",
@@ -134,20 +146,28 @@ namespace BackupUtility
             listSourceFolders.Items.Remove(listSourceFolders.SelectedItem);
         }
 
+        /*
+            Runs when the user clicks the Save Profile button.
+            It validates that the required folders are selected, then
+            save the current source folders and destination as the default profile.
+         */
         private void btnSaveProfile_Click(object sender, EventArgs e)
         {
+            // A profile must contain at least one source folder
             if (listSourceFolders.Items.Count == 0)
             {
                 MessageBox.Show("Please add at least one source folder before saving the profile.");
                 return;
             }
 
+            // A profile cannot be saved without a backup destination
             if (string.IsNullOrWhiteSpace(txtDestinationPath.Text))
             {
                 MessageBox.Show("Please select a destination folder before saving the profile.");
                 return;
             }
 
+            // Attempt to save the profile and report whether the operation succeeded
             try
             {
                 SaveBackupProfile();
@@ -155,12 +175,19 @@ namespace BackupUtility
             }
             catch (Exception ex)
             {
+                // Display file, permission, marker, or JSON errors without crashing the application.
                 MessageBox.Show("The backup profile could not be saved: " + ex.Message);
             }
         }
 
+        /*
+            Runs when the user clicks View History.
+            It loads the saved history entries from JSON and opens the
+            read-only BackupHistoryForm.
+        */
         private void btnViewHistory_Click(object sender, EventArgs e)
         {
+            // Stop early if no history file has been created yet
             if (!File.Exists(historyFile))
             {
                 MessageBox.Show("No backup history is available yet.");
@@ -169,35 +196,56 @@ namespace BackupUtility
 
             try
             {
+                // Read the complete history JSON from the user's application-data folder
                 string json = File.ReadAllText(historyFile);
+
+                // Convert the JSON array into a list of BackupHistoryEntry objects.
+                // Use an empty list if deserialization produces no result.
                 List<BackupHistoryEntry> history =
                     JsonSerializer.Deserialize<List<BackupHistoryEntry>>(json)
                     ?? new List<BackupHistoryEntry>();
 
+                // Do not open an empty history window when there are no saved entries
                 if (history.Count == 0)
                 {
                     MessageBox.Show("No backup history is available yet.");
                     return;
                 }
 
+                // Open the history window as a modal dialog
+                // using ensures the form's resources are disposed after it closes
                 using BackupHistoryForm historyForm = new BackupHistoryForm(history, historyFile);
                 historyForm.ShowDialog(this);
             }
             catch (Exception ex)
             {
+                // Handle unreadable or invalid history JSON without crashing the application
                 MessageBox.Show("The backup history could not be loaded: " + ex.Message);
             }
         }
 
+        /*
+            Saves the current source folders and backup destination as the default profile.
+            It also creates or reuses the destination marker and stores the information needed
+            to find that destination if its drive letter changes.
+         */
         private void SaveBackupProfile()
         {
+            // Convert the destination into a complete, normalized path before saving it
             string fullDestinationPath = Path.GetFullPath(txtDestinationPath.Text);
+
+            // Create the service responsible for destination markers and drive-relative paths
             BackupDestinationService destinationService = new BackupDestinationService();
 
+            // Reuse the destination's existing marker ID or create one if none exists
             string markerId = destinationService.GetOrCreateMarkerId(fullDestinationPath);
+
+            // Remove the drive-specific portion of the path so the destination
+            // can still be found if Windows assigns the drive a different letter
             string relativePath =
                 destinationService.GetDestinationRelativePath(fullDestinationPath);
 
+            // Collect the current UI settings and destination identity into one profile object
             BackupProfile profile = new BackupProfile
             {
                 SourceFolders = listSourceFolders.Items.Cast<string>().ToList(),
@@ -206,10 +254,13 @@ namespace BackupUtility
                 DestinationRelativePath = relativePath
             };
 
+            // Get the directory where the profile JSON file will be stored
             string? profileDirectory = Path.GetDirectoryName(profileFile);
 
             if (!string.IsNullOrEmpty(profileDirectory))
             {
+                // Create the application-data directory if it does not already exist
+                // This method is safe to call when the directory already exists
                 Directory.CreateDirectory(profileDirectory);
             }
 
@@ -220,11 +271,22 @@ namespace BackupUtility
                 WriteIndented = true
             });
 
+            // Save the JSON, replacing the previous default profile
             File.WriteAllText(profileFile, json);
+
+            // Keep the successfully saved profile in memory for status checks
+            // and pre-backup destination validation
             activeProfile = profile;
+
+            // Immediately verify the saved destination and update its status label
             UpdateDestinationStatus(profile);
         }
 
+        /*
+            Loads the saved default backup profile when the application starts.
+            It restores the source folders and destination path, then checks
+            whether the saved backup destination is currently available.
+         */
         private void LoadBackupProfile()
         {
             // A missing file simply means the user has not saved a profile yet.
@@ -235,17 +297,21 @@ namespace BackupUtility
 
             try
             {
+                // Read the JSON and convert it back into a BackupProfile object
                 string json = File.ReadAllText(profileFile);
                 BackupProfile? profile = JsonSerializer.Deserialize<BackupProfile>(json);
 
+                // Deserialization can return null if the JSON does not contain a profile
                 if (profile == null)
                 {
                     return;
                 }
 
+                // Remove any existing UI entries before restoring the saved folders
                 listSourceFolders.Items.Clear();
 
-                // Distinct uses the same case-insensitive behavior as the Add Folder button.
+                // Ignore blank paths and remove duplicates using the same
+                // case-insensitive comparison as the Add Folder button
                 foreach (string sourceFolder in profile.SourceFolders
                     .Where(folder => !string.IsNullOrWhiteSpace(folder))
                     .Distinct(StringComparer.OrdinalIgnoreCase))
@@ -253,32 +319,50 @@ namespace BackupUtility
                     listSourceFolders.Items.Add(sourceFolder);
                 }
 
+                // Keep the loaded profile in memory for automatic status checks
+                // and pre-backup destination validation.
                 activeProfile = profile;
-                txtDestinationPath.Text = profile.DestinationPath ?? string.Empty;
+
+                // Restore the saved destination path in the textbox.
+                txtDestinationPath.Text =
+                    profile.DestinationPath ?? string.Empty; // use DestinationPath unless it is null, otherwise, use an empty string
+
+                // Check whether the marked destination is currently available.
                 UpdateDestinationStatus(profile);
             }
             catch (Exception ex)
             {
+                // Handle unreadable or invalid profile data without crashing the application
                 MessageBox.Show("The saved backup profile could not be loaded: " + ex.Message);
             }
         }
-
+        /*
+            Scans the available drives for the marker stored in the supplied profile.
+            It updates the status label and returns the complete detection result
+            so other code can decide whether a backup is allowed to start.
+        */
         private BackupDestinationDetectionResult? UpdateDestinationStatus(BackupProfile profile)
         {
+            // A profile without a marker ID has not been configured
+            // for reliable destination detection
             if (string.IsNullOrWhiteSpace(profile.DestinationMarkerId))
             {
                 ShowDestinationNotConfigured();
                 return null;
             }
 
+            // Ask the destination service to search for the marker saved in the profile
             BackupDestinationService destinationService = new BackupDestinationService();
+
             BackupDestinationDetectionResult result = destinationService.DetectDestination(
                 profile.DestinationMarkerId,
                 profile.DestinationRelativePath
             );
 
+            // Convert the enum value into readable text for the status label
             lblDestinationStatus.Text = $"Backup Destination Status: {FormatStatus(result.Status)}";
 
+            // Use a different color to make each status easier to recognize
             lblDestinationStatus.ForeColor = result.Status switch
             {
                 BackupDestinationStatus.Connected => Color.DarkGreen,
@@ -288,28 +372,48 @@ namespace BackupUtility
                 _ => Color.DimGray
             };
 
+            // Return the result so the Start Backup handler can enforce it
             return result;
         }
 
+        /*
+            Converts destination-status enum values into user-friendly text.
+            Values that do not need special spacing use their enum name directly.
+        */
         private string FormatStatus(BackupDestinationStatus status)
         {
             return status switch
             {
+                // Add spaces to enum names that contain multiple words
                 BackupDestinationStatus.NotFound => "Not Found",
                 BackupDestinationStatus.MultipleMatches => "Multiple Matches",
                 BackupDestinationStatus.InvalidMarker => "Invalid Marker",
+
+                // Connected already has the correct display format
                 _ => status.ToString()
             };
         }
 
+        /*
+            Resets the destination label when there is no saved and verified
+            marker configuration for the path currently shown in the textbox.
+        */
         private void ShowDestinationNotConfigured()
         {
+            // Use neutral text and color because this is a configuration state,
+            // not a missing or invalid destination error
             lblDestinationStatus.Text = "Backup Destination Status: Not Configured";
             lblDestinationStatus.ForeColor = Color.DimGray;
         }
 
+        /*
+            Checks whether the destination shown in the textbox still matches
+            the destination stored in the active profile. This prevents an unsaved
+            path change from using the previously verified marker.
+         */
         private bool DestinationTextMatchesActiveProfile()
         {
+            // There is no saved destination to compare when no profile is active
             if (activeProfile == null)
             {
                 return false;
@@ -317,17 +421,26 @@ namespace BackupUtility
 
             try
             {
+                // Normalize both paths and remove trailing directory separators
+                // so equivalent paths such as "E:\\Backups" and "E:\\Backups\\"
+                // are treated as equal
                 string visiblePath = Path.TrimEndingDirectorySeparator(
                     Path.GetFullPath(txtDestinationPath.Text)
                 );
+
                 string savedPath = Path.TrimEndingDirectorySeparator(
                     Path.GetFullPath(activeProfile.DestinationPath)
                 );
 
-                return visiblePath.Equals(savedPath, StringComparison.OrdinalIgnoreCase);
+                // Windows paths are compared without treating letter casing as significant
+                return visiblePath.Equals(
+                    savedPath,
+                    StringComparison.OrdinalIgnoreCase
+                );
             }
             catch
             {
+                // An invalid path cannot safely match the saved destination
                 return false;
             }
         }
@@ -341,20 +454,23 @@ namespace BackupUtility
          */
         private async void btnStartBackup_Click(object sender, EventArgs e)
         {
-            // Make sure the user selected a source folder
+            // A backup requires at least one source folder
+            // Stop before starting any backup work if the list is empty
             if (listSourceFolders.Items.Count == 0)
             {
                 MessageBox.Show("Please add at least one source folder.");
                 return;
             }
 
-            // Make sure the user selected a destination/backup folder
+            // A destination path must be displayed before its saved marker can be verified
             if (string.IsNullOrWhiteSpace(txtDestinationPath.Text))
             {
                 MessageBox.Show("Please select a destination folder.");
                 return;
             }
 
+            // A reliable backup destination must have an active profile and marker ID
+            // Without them, BackupUtility cannot confirm that it found the intended destination
             if (activeProfile == null ||
                 string.IsNullOrWhiteSpace(activeProfile.DestinationMarkerId))
             {
@@ -366,6 +482,8 @@ namespace BackupUtility
                 return;
             }
 
+            // Prevent an edited destination textbox from using the identity stored
+            // for a different saved path. The changed path must be saved and verified first
             if (!DestinationTextMatchesActiveProfile())
             {
                 ShowDestinationNotConfigured();
@@ -514,63 +632,95 @@ namespace BackupUtility
             }
         }
 
+        /*
+            Saves the current date and time after a backup completes successfully.
+            This value is stored separately from backup history and is restored
+            in the Last Backup label when the application starts.
+         */
         private void SaveLastBackupTime()
         {
+            // Create a settings object containing the current completion time
             BackupSettings settings = new BackupSettings
             {
                 LastBackup = DateTime.Now
             };
 
+            // Convert the settings object into JSON
             string json = JsonSerializer.Serialize(settings);
 
+            // Save the JSON, replacing the previously stored backup time
             File.WriteAllText(settingsFile, json);
         }
 
+        /*
+            Adds one completed backup result to the persistent history.
+            Existing entries are loaded first so the new entry is appended
+            instead of replacing the previous backup history.
+         */
         private void SaveBackupHistoryEntry(BackupHistoryEntry newEntry)
         {
+            // Begin with an empty list for the application's first history entry
             List<BackupHistoryEntry> history = new List<BackupHistoryEntry>();
 
+            // Load the existing entries when a history file has already been created
             if (File.Exists(historyFile))
             {
                 string existingJson = File.ReadAllText(historyFile);
 
                 // The history file contains a JSON array, so deserialize it into a list.
+                // Use an empty list if deserialization does not produce a result
                 history = JsonSerializer.Deserialize<List<BackupHistoryEntry>>(existingJson)
                     ?? new List<BackupHistoryEntry>();
             }
 
+            // Append this copmleted backup without removing previous entries
             history.Add(newEntry);
 
+            // Get the application-data directory containing the history file
             string? historyDirectory = Path.GetDirectoryName(historyFile);
 
             if (!string.IsNullOrEmpty(historyDirectory))
             {
+                // Create the directory if necessary. Nothing happens if it already exists
                 Directory.CreateDirectory(historyDirectory);
             }
 
+            // Convert the full history list into readable, indented JSON
             string json = JsonSerializer.Serialize(history, new JsonSerializerOptions
             {
                 WriteIndented = true
             });
 
+            // Save the updated list, replacing the old JSON with the new complete list
             File.WriteAllText(historyFile, json);
         }
 
+        /*
+            Loads the most recent successful backup time when the application starts.
+            If no settings file exists, the label indicates that a backup has
+            never been completed.
+        */
         private void LoadLastBackupTime()
         {
+            // A missing settings file means no successful backup time has been saved
             if (!File.Exists(settingsFile))
             {
                 lblLastBackup.Text = "Last backup: Never";
                 return;
             }
 
+            // Return the saved settings JSON
             string json = File.ReadAllText(settingsFile);
 
+            // Convert the JSON back into a BackupSetting object
+            // The result is nullable because deserialization may not produce an object
             BackupSettings? settings =
                 JsonSerializer.Deserialize<BackupSettings>(json);
 
+            // Update the label only when both settings object and timestamp exist
             if (settings?.LastBackup != null)
             {
+                // The "g" format display a short date together with a short
                 lblLastBackup.Text = $"Last backup: {settings.LastBackup.Value:g}";
             }
         }

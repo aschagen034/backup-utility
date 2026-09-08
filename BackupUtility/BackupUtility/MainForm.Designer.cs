@@ -71,7 +71,7 @@
             // 
             // btnSaveProfile
             // 
-            btnSaveProfile.Location = new Point(411, 378);
+            btnSaveProfile.Location = new Point(407, 378);
             btnSaveProfile.Name = "btnSaveProfile";
             btnSaveProfile.Size = new Size(129, 40);
             btnSaveProfile.TabIndex = 3;

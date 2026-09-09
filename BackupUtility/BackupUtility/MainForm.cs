@@ -77,6 +77,24 @@ namespace BackupUtility
                         return;
                     }
 
+                    string? conflictingFolder = FindSourceFolderNameCollision(
+                        selectedFolder,
+                        listSourceFolders.Items.Cast<string>()
+                    );
+
+                    if (conflictingFolder != null)
+                    {
+                        string backupFolderName = GetSourceBackupFolderName(selectedFolder);
+
+                        MessageBox.Show(
+                            "This source folder cannot be added because another source folder " +
+                            $"already uses the backup folder name \"{backupFolderName}\".\n\n" +
+                            $"Existing: {conflictingFolder}\n" +
+                            $"Selected: {selectedFolder}"
+                        );
+                        return;
+                    }
+
                     // Add the folder if it is not already in the list
                     listSourceFolders.Items.Add(selectedFolder);
                 }
@@ -144,6 +162,72 @@ namespace BackupUtility
 
             // Remove the selected folder from the list of source folders
             listSourceFolders.Items.Remove(listSourceFolders.SelectedItem);
+        }
+
+        /*
+            Returns an existing source folder whose final folder name would map
+            to the same destination subfolder as the candidate source.
+        */
+        private string? FindSourceFolderNameCollision(
+            string candidateFolder,
+            IEnumerable<string> existingFolders)
+        {
+            string candidateName = GetSourceBackupFolderName(candidateFolder);
+
+            return existingFolders.FirstOrDefault(existingFolder =>
+                GetSourceBackupFolderName(existingFolder).Equals(
+                    candidateName,
+                    StringComparison.OrdinalIgnoreCase
+                ));
+        }
+
+        /*
+            Gets the final folder name that BackupService uses as the source's
+            top-level destination folder. Trailing separators are removed first.
+        */
+        private string GetSourceBackupFolderName(string sourceFolder)
+        {
+            string trimmedPath = Path.TrimEndingDirectorySeparator(sourceFolder);
+            string folderName = Path.GetFileName(trimmedPath);
+
+            // Drive roots do not have a normal final folder name and currently
+            // map directly into the backup destination root.
+            return string.IsNullOrEmpty(folderName) ? "<destination root>" : folderName;
+        }
+
+        /*
+            Checks all selected sources for duplicate destination folder names.
+            This protects against collisions loaded from older or edited profile JSON.
+        */
+        private bool TryFindSourceFolderNameCollision(
+            List<string> sourceFolders,
+            out string firstFolder,
+            out string secondFolder,
+            out string backupFolderName)
+        {
+            for (int firstIndex = 0; firstIndex < sourceFolders.Count; firstIndex++)
+            {
+                for (int secondIndex = firstIndex + 1;
+                    secondIndex < sourceFolders.Count;
+                    secondIndex++)
+                {
+                    string firstName = GetSourceBackupFolderName(sourceFolders[firstIndex]);
+                    string secondName = GetSourceBackupFolderName(sourceFolders[secondIndex]);
+
+                    if (firstName.Equals(secondName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        firstFolder = sourceFolders[firstIndex];
+                        secondFolder = sourceFolders[secondIndex];
+                        backupFolderName = firstName;
+                        return true;
+                    }
+                }
+            }
+
+            firstFolder = string.Empty;
+            secondFolder = string.Empty;
+            backupFolderName = string.Empty;
+            return false;
         }
 
         /*
@@ -462,6 +546,27 @@ namespace BackupUtility
                 return;
             }
 
+            // Convert the ListBox entries into a normal list for validation
+            // and for passing to BackupService later.
+            List<string> sourceFolders = listSourceFolders.Items
+                .Cast<string>()
+                .ToList();
+
+            if (TryFindSourceFolderNameCollision(
+                sourceFolders,
+                out string firstFolder,
+                out string secondFolder,
+                out string backupFolderName))
+            {
+                MessageBox.Show(
+                    "Backup cannot start because two source folders use the same " +
+                    $"backup folder name \"{backupFolderName}\".\n\n" +
+                    $"First: {firstFolder}\n" +
+                    $"Second: {secondFolder}"
+                );
+                return;
+            }
+
             // A destination path must be displayed before its saved marker can be verified
             if (string.IsNullOrWhiteSpace(txtDestinationPath.Text))
             {
@@ -507,12 +612,6 @@ namespace BackupUtility
                 MessageBox.Show("Backup cannot start. " + reason);
                 return;
             }
-
-            // Convert all folders currently stored in the ListBox
-            // into a normal List<string> that can be passed to BackupService
-            List<string> sourceFolders = listSourceFolders.Items
-                .Cast<string>()
-                .ToList();
 
             // Use the path found by the marker scan. Its drive letter may differ
             // from the one that was originally saved in the profile.

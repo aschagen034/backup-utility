@@ -2,12 +2,13 @@
 
 BackupUtility is a Windows desktop backup application built with C# and WinForms on .NET 8. It copies files from one or more source folders to a verified backup destination while preserving folder structure, reporting progress, and recording backup history.
 
-The project is being developed incrementally as a learning-focused application. The current implementation provides normal incremental backup behavior; versioned backups and restore functionality are planned but are not implemented yet.
+The current implementation provides normal incremental backup behavior; versioned backups and restore functionality are planned but are not implemented yet.
 
 ## Current features
 
 - Add and remove multiple source folders.
 - Prevent duplicate source-folder entries.
+- Reject source folders with the same final folder name to prevent destination collisions.
 - Select and save one default backup destination.
 - Save the default backup profile as JSON and restore it at startup.
 - Recursively scan all files beneath each source folder.
@@ -57,6 +58,8 @@ You can also open `BackupUtility/BackupUtility.sln` in Visual Studio and run the
 7. Click **View History** to inspect completed runs and individual file errors.
 
 Do not place the backup destination inside one of the selected source folders. Doing so could cause the backup destination to be included in the recursive source scan.
+
+Each source folder must also have a unique final folder name. For example, `C:\Work\Documents` and `D:\Personal\Documents` cannot be selected together because both would map to the same `Documents` folder in the backup. BackupUtility rejects the conflicting source instead of risking merged or overwritten files.
 
 ## Backup behavior
 
@@ -189,7 +192,7 @@ BackupUtility/
 - Files removed from a source are not deleted from the destination.
 - Files are compared using modification timestamps rather than content hashes.
 - Retention limits, compression, encryption, scheduling, and cancellation are not implemented.
-- Source folders with the same final folder name can map to the same destination subfolder.
+- Source folders with the same final folder name cannot currently be selected together. Source aliases may be considered in a future version.
 - A failure while initially enumerating an entire source directory can stop that backup run; individual file-processing errors are handled separately.
 
 ## Roadmap

@@ -14,7 +14,11 @@ namespace BackupUtility
             structure, reports live progress, and returns the final backup results.
             Individual file errors are recorded without stopping the remaining backup.
         */
-        public async Task<BackupProgress> RunBackupAsync(List<string> sourceFolders, string destinationFolder, IProgress<BackupProgress> progress)
+        public async Task<BackupProgress> RunBackupAsync(
+            List<string> sourceFolders,
+            string destinationFolder,
+            IProgress<BackupProgress> progress,
+            CancellationToken cancellationToken)
         {
             // Run the file-copying work on a background thread
             // so the WinForms interface stays responsive
@@ -31,14 +35,21 @@ namespace BackupUtility
 
                 foreach (string sourceFolder in sourceFolders)
                 {
+                    // Stop before scanning another source folder if cancellation
+                    // has been requested by the user interface.
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     // Get every file inside the source folder, including files inside all subfolders
                     totalFiles += Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories).Length;
 
+                    cancellationToken.ThrowIfCancellationRequested();
                 }
 
                 // Go through each selected source folder
                 foreach (string sourceFolder in sourceFolders)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     // Get the name of the source folder itself
                     string sourceFolderName = Path.GetFileName(sourceFolder);
 
@@ -48,6 +59,10 @@ namespace BackupUtility
                     // Go through every file found in the source folder
                     foreach (string file in files)
                     {
+                        // Cancellation is checked outside the file-processing try/catch
+                        // so it is not mistakenly recorded as an ordinary file error.
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         scannedCount++;
 
                         try
@@ -133,7 +148,7 @@ namespace BackupUtility
                     ErrorCount = errorCount,
                     FailedFiles = failedFiles
                 };
-            });
+            }, cancellationToken);
         }
     }
 }

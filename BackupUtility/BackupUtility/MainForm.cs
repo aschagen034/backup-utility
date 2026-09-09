@@ -676,7 +676,8 @@ namespace BackupUtility
                 BackupProgress result = await backupService.RunBackupAsync(
                     sourceFolders,
                     destinationFolder,
-                    progress
+                    progress,
+                    CancellationToken.None
                 );
 
                 // This text will only show once the backup has completed

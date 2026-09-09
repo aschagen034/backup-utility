@@ -17,6 +17,7 @@ The current implementation provides normal incremental backup behavior; versione
 - Overwrite destination files when the source has a newer modification time.
 - Skip unchanged files.
 - Run file processing asynchronously so the WinForms interface remains responsive.
+- Allow an in-progress backup to be cancelled cooperatively.
 - Display progress, percentage, files scanned, files copied, files skipped, and errors.
 - Continue processing when an individual file fails.
 - Record failed file paths and error messages.
@@ -54,7 +55,7 @@ You can also open `BackupUtility/BackupUtility.sln` in Visual Studio and run the
    - It creates or reuses a destination marker in the selected folder.
 4. Confirm that **Backup Destination Status** displays `Connected`.
 5. Click **Start Backup**.
-6. Follow progress and statistics on the main form.
+6. Follow progress and statistics on the main form, or click **Cancel Backup** to stop processing.
 7. Click **View History** to inspect completed runs and individual file errors.
 
 Do not place the backup destination inside one of the selected source folders. Doing so could cause the backup destination to be included in the recursive source scan.
@@ -79,7 +80,22 @@ For every source file, BackupUtility currently applies these rules:
 3. Otherwise, skip the file.
 4. If one file fails, record the error and continue with the remaining files.
 
-This is an incremental mirror-style backup. Older versions of overwritten files are not currently retained.
+This is an incremental copy backup. Older versions of overwritten files are not currently retained.
+
+## Cancelling a backup
+
+While a backup is running, **Start Backup** is disabled and **Cancel Backup** is enabled. Clicking **Cancel Backup** requests cooperative cancellation. BackupUtility stops before processing the next file or source folder after it notices the request.
+
+Cancellation does not roll back work that already succeeded:
+
+- Files copied before cancellation remain in the destination.
+- A file currently being copied normally finishes before cancellation takes effect because `File.Copy` cannot be interrupted mid-copy.
+- Files that have not been processed are left for a later run.
+- Cancellation is not counted as a file error.
+- A cancelled run does not update the last successful backup time.
+- A cancelled run is not added to completed backup history.
+
+Starting the backup again is safe: previously copied unchanged files will be skipped, and remaining files will continue to be processed.
 
 ## Saved profile
 
@@ -191,7 +207,7 @@ BackupUtility/
 - Restore functionality is not implemented.
 - Files removed from a source are not deleted from the destination.
 - Files are compared using modification timestamps rather than content hashes.
-- Retention limits, compression, encryption, scheduling, and cancellation are not implemented.
+- Retention limits, compression, encryption, and scheduling are not implemented.
 - Source folders with the same final folder name cannot currently be selected together. Source aliases may be considered in a future version.
 - A failure while initially enumerating an entire source directory can stop that backup run; individual file-processing errors are handled separately.
 

@@ -33,6 +33,7 @@
             btnSaveProfile = new Button();
             btnViewHistory = new Button();
             btnStartBackup = new Button();
+            btnCancelBackup = new Button();
             lblTitle = new Label();
             sourcePanel = new Panel();
             btnRemoveSource = new Button();
@@ -84,7 +85,7 @@
             btnViewHistory.Location = new Point(875, 377);
             btnViewHistory.Name = "btnViewHistory";
             btnViewHistory.Size = new Size(129, 40);
-            btnViewHistory.TabIndex = 5;
+            btnViewHistory.TabIndex = 6;
             btnViewHistory.Text = "View History";
             btnViewHistory.UseVisualStyleBackColor = true;
             btnViewHistory.Click += btnViewHistory_Click;
@@ -95,13 +96,24 @@
             btnStartBackup.FlatStyle = FlatStyle.Flat;
             btnStartBackup.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnStartBackup.ForeColor = SystemColors.Control;
-            btnStartBackup.Location = new Point(649, 377);
+            btnStartBackup.Location = new Point(649, 376);
             btnStartBackup.Name = "btnStartBackup";
             btnStartBackup.Size = new Size(129, 40);
             btnStartBackup.TabIndex = 4;
             btnStartBackup.Text = "Start Backup";
             btnStartBackup.UseVisualStyleBackColor = false;
             btnStartBackup.Click += btnStartBackup_Click;
+            //
+            // btnCancelBackup
+            //
+            btnCancelBackup.Enabled = false;
+            btnCancelBackup.Location = new Point(649, 426);
+            btnCancelBackup.Name = "btnCancelBackup";
+            btnCancelBackup.Size = new Size(129, 40);
+            btnCancelBackup.TabIndex = 5;
+            btnCancelBackup.Text = "Cancel Backup";
+            btnCancelBackup.UseVisualStyleBackColor = true;
+            btnCancelBackup.Click += btnCancelBackup_Click;
             // 
             // lblTitle
             // 
@@ -331,6 +343,7 @@
             Controls.Add(lblTitle);
             Controls.Add(btnViewHistory);
             Controls.Add(btnSaveProfile);
+            Controls.Add(btnCancelBackup);
             Controls.Add(btnStartBackup);
             Name = "MainForm";
             Text = "Backup Utility";
@@ -351,6 +364,7 @@
         private Button btnSaveProfile;
         private Button btnViewHistory;
         private Button btnStartBackup;
+        private Button btnCancelBackup;
         private Label lblTitle;
         private Panel sourcePanel;
         private Label lblSource;

@@ -44,6 +44,10 @@ namespace BackupUtility
         // Keeps the destination identity that was last loaded from or saved to the profile.
         private BackupProfile? activeProfile;
 
+        // Exists only while a backup is running and allows the Cancel button
+        // to signal the CancellationToken passed to BackupService.
+        private CancellationTokenSource? backupCancellationTokenSource;
+
         private void MainForm_Load(object sender, EventArgs e)
         {
 
@@ -530,6 +534,26 @@ namespace BackupUtility
         }
 
         /*
+            Runs when the user clicks Cancel Backup.
+            It updates the UI to show that cancellation is in progress and signals the
+            CancellationTokenSource used by the current backup operation.
+         */
+        private void btnCancelBackup_Click(object sender, EventArgs e)
+        {
+            // Ignore the click if no backup is running or cancellation
+            // has already been requested for the current backup.
+            if (backupCancellationTokenSource == null ||
+                backupCancellationTokenSource.IsCancellationRequested)
+            {
+                return;
+            }
+
+            lblStatus.Text = "Cancelling backup...";
+            btnCancelBackup.Enabled = false;
+            backupCancellationTokenSource.Cancel();
+        }
+
+        /*
             Starts the backup when the user clicks the button.
             It scans all files across multiple source folders, copies new or modified files in the background,
             skips unchanged files, and updates the progress bar and backup results. 
@@ -622,9 +646,13 @@ namespace BackupUtility
             lblProgressPercent.Text = "0%";
             lblStatus.Text = "Starting backup...";
 
+            // Create a new cancellation source for this backup run only.
+            backupCancellationTokenSource = new CancellationTokenSource();
+
             // Disbale the Start Backup button so the user cannot
             // start another backup while one is already running
             btnStartBackup.Enabled = false;
+            btnCancelBackup.Enabled = true;
 
             // Reset the backup statistics from the previous backup
             lblFilesScanned.Text = "Files scanned: 0";
@@ -677,7 +705,7 @@ namespace BackupUtility
                     sourceFolders,
                     destinationFolder,
                     progress,
-                    CancellationToken.None
+                    backupCancellationTokenSource.Token
                 );
 
                 // This text will only show once the backup has completed
@@ -719,6 +747,11 @@ namespace BackupUtility
                 }
            
             }
+            catch (OperationCanceledException)
+            {
+                // Cancellation is an expected user action, not a backup failure.
+                lblStatus.Text = "Backup cancelled.";
+            }
             catch (Exception ex)
             {           
                 // If anything goes wrong during backup, show the error instead of crashing the program
@@ -729,6 +762,10 @@ namespace BackupUtility
                 // Always turn the Start Backup button back on,
                 // whether the backup succeeded or failed
                 btnStartBackup.Enabled = true;
+                btnCancelBackup.Enabled = false;
+
+                backupCancellationTokenSource?.Dispose();
+                backupCancellationTokenSource = null;
             }
         }
 
